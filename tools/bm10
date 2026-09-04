@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>极简跑分工具</title>
+    <style>
+        /* 极简样式：无任何装饰，仅保证文字清晰居中 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+            user-select: none;
+        }
+        .title {
+            font-size: 28px;
+            font-weight: 400;
+            color: #000000;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+        }
+        .btn {
+            font-size: 20px;
+            font-weight: 400;
+            color: #000000;
+            background: #f0f0f0;
+            border: 1px solid #cccccc;
+            padding: 10px 40px;
+            cursor: pointer;
+            border-radius: 0;
+            transition: background 0.15s;
+            display: inline-block;
+            margin-bottom: 30px;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+        }
+        .btn:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .result {
+            font-size: 22px;
+            font-weight: 400;
+            color: #000000;
+        }
+        .result .score {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .result .waiting {
+            color: #888888;
+            font-weight: 400;
+        }
+        /* 极小屏幕适配 */
+        @media (max-width: 480px) {
+            .title {
+                font-size: 22px;
+            }
+            .btn {
+                font-size: 18px;
+                padding: 8px 30px;
+            }
+            .result {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 第一行：标题 -->
+        <div class="title">极简跑分工具1.0</div>
+
+        <!-- 第二行：按钮 -->
+        <button class="btn" id="runBtn">开始跑分</button>
+
+        <!-- 第三行：性能指数 -->
+        <div class="result">
+            性能指数：<span class="score" id="scoreDisplay">等待测试...</span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const btn = document.getElementById('runBtn');
+            const scoreSpan = document.getElementById('scoreDisplay');
+
+            // 测试配置
+            const ITERATIONS = 5000000; // 500万次运算
+
+            /**
+             * 执行CPU性能测试
+             * @returns {number} 测试耗时（毫秒）
+             */
+            function runBenchmark() {
+                const start = performance.now();
+                let sum = 0;
+                // 混合浮点运算：sin/cos/sqrt + 乘法 + 取模
+                for (let i = 1; i <= ITERATIONS; i++) {
+                    sum += Math.sin(i * 0.1) * Math.cos(i * 0.1) + Math.sqrt(i);
+                    sum = sum % 1000;
+                }
+                // 使用sum防止JIT完全优化掉（虽然实际上不会，但保留）
+                if (sum < 0) {
+                    console.log(sum);
+                }
+                const end = performance.now();
+                return end - start;
+            }
+
+            /**
+             * 计算性能指数
+             * @param {number} timeMs 测试耗时（毫秒）
+             * @returns {number} 性能指数
+             */
+            function calcScore(timeMs) {
+                // 时间越短分数越高，基准值10000000
+                return Math.round(10000000 / timeMs);
+            }
+
+            /**
+             * 格式化数字，添加千位分隔符
+             */
+            function formatNumber(num) {
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            }
+
+            /**
+             * 开始跑分
+             */
+            function startBenchmark() {
+                // 禁用按钮，显示测试中
+                btn.textContent = '测试中...';
+                btn.disabled = true;
+                scoreSpan.textContent = '运行中...';
+                scoreSpan.className = 'score waiting';
+
+                // 使用setTimeout延迟执行，让UI有机会更新
+                setTimeout(function() {
+                    try {
+                        // 执行测试
+                        const timeMs = runBenchmark();
+                        // 计算性能指数
+                        const score = calcScore(timeMs);
+                        // 显示结果
+                        scoreSpan.textContent = formatNumber(score);
+                        scoreSpan.className = 'score';
+                    } catch (e) {
+                        // 异常处理
+                        scoreSpan.textContent = '错误';
+                        scoreSpan.className = 'score waiting';
+                        console.error(e);
+                    } finally {
+                        // 恢复按钮
+                        btn.textContent = '开始跑分';
+                        btn.disabled = false;
+                    }
+                }, 80);
+            }
+
+            // 绑定点击事件
+            btn.addEventListener('click', startBenchmark);
+
+            // 键盘支持：按空格或回车触发
+            btn.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (!this.disabled) {
+                        startBenchmark();
+                    }
+                }
+            });
+
+            // 页面加载完成后，将初始状态设置为"等待测试..."
+            // 此时scoreSpan已经是"等待测试..."，无需额外操作
+
+        })();
+    </script>
+
+</body>
+</html>
