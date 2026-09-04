@@ -2,10 +2,10 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>极简跑分工具</title>
     <style>
-        /* 极简样式：无任何装饰，仅保证文字清晰居中 */
+        /* 极简样式，但确保按钮大而可点，适配老设备 */
         * {
             margin: 0;
             padding: 0;
@@ -20,10 +20,14 @@
             min-height: 100vh;
             margin: 0;
             padding: 20px;
+            /* 确保触屏设备点击区域不被缩放影响 */
+            touch-action: manipulation;
         }
         .container {
             text-align: center;
             user-select: none;
+            width: 100%;
+            max-width: 400px;
         }
         .title {
             font-size: 28px;
@@ -31,14 +35,15 @@
             color: #000000;
             letter-spacing: 1px;
             margin-bottom: 30px;
+            word-break: break-word;
         }
         .btn {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: 400;
             color: #000000;
             background: #f0f0f0;
-            border: 1px solid #cccccc;
-            padding: 10px 40px;
+            border: 2px solid #aaaaaa;
+            padding: 16px 40px;
             cursor: pointer;
             border-radius: 0;
             transition: background 0.15s;
@@ -46,18 +51,28 @@
             margin-bottom: 30px;
             font-family: inherit;
             letter-spacing: 0.5px;
+            /* 提升触屏点击面积 */
+            min-width: 200px;
+            min-height: 64px;
+            line-height: 1.2;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         }
         .btn:hover:not(:disabled) {
             background: #e0e0e0;
+        }
+        .btn:active:not(:disabled) {
+            background: #d0d0d0;
         }
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
         .result {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 400;
             color: #000000;
+            word-break: break-word;
         }
         .result .score {
             font-weight: 600;
@@ -70,14 +85,16 @@
         /* 极小屏幕适配 */
         @media (max-width: 480px) {
             .title {
-                font-size: 22px;
+                font-size: 24px;
             }
             .btn {
-                font-size: 18px;
-                padding: 8px 30px;
+                font-size: 20px;
+                padding: 14px 30px;
+                min-width: 160px;
+                min-height: 56px;
             }
             .result {
-                font-size: 18px;
+                font-size: 20px;
             }
         }
     </style>
@@ -104,37 +121,55 @@
             const btn = document.getElementById('runBtn');
             const scoreSpan = document.getElementById('scoreDisplay');
 
-            // 测试配置
-            const ITERATIONS = 5000000; // 500万次运算
+            // ----- 测试配置 -----
+            // 增加到 3000 万次混合运算，使测试时间足够长，体现设备差异
+            const ITERATIONS = 30000000;
+            // 分数基准 (100000000 / 耗时毫秒)
+            const SCORE_BASE = 100000000;
+
+            // ----- 兼容性：性能计时器 -----
+            const getTime = (function() {
+                if (window.performance && typeof window.performance.now === 'function') {
+                    return function() { return performance.now(); };
+                } else {
+                    // 降级方案：使用 Date.now()
+                    return function() { return Date.now(); };
+                }
+            })();
+
+            // ----- 运行状态锁，防止重复点击 -----
+            let isRunning = false;
 
             /**
-             * 执行CPU性能测试
+             * 执行 CPU 性能测试
              * @returns {number} 测试耗时（毫秒）
              */
             function runBenchmark() {
-                const start = performance.now();
+                const start = getTime();
                 let sum = 0;
-                // 混合浮点运算：sin/cos/sqrt + 乘法 + 取模
+                // 混合运算：sin/cos/sqrt + 乘除 + 取模
                 for (let i = 1; i <= ITERATIONS; i++) {
                     sum += Math.sin(i * 0.1) * Math.cos(i * 0.1) + Math.sqrt(i);
-                    sum = sum % 1000;
+                    sum = (sum * 1.1) % 1000; // 额外乘法和取模
                 }
-                // 使用sum防止JIT完全优化掉（虽然实际上不会，但保留）
+                // 防止循环被完全优化（虽然理论上不会）
                 if (sum < 0) {
                     console.log(sum);
                 }
-                const end = performance.now();
+                const end = getTime();
                 return end - start;
             }
 
             /**
              * 计算性能指数
              * @param {number} timeMs 测试耗时（毫秒）
-             * @returns {number} 性能指数
+             * @returns {number} 性能指数（整数）
              */
             function calcScore(timeMs) {
-                // 时间越短分数越高，基准值10000000
-                return Math.round(10000000 / timeMs);
+                // 时间越短分数越高，使用 SCORE_BASE / timeMs
+                // 若时间过短（<1ms）则保护，但实际不会
+                if (timeMs < 1) timeMs = 1;
+                return Math.round(SCORE_BASE / timeMs);
             }
 
             /**
@@ -145,54 +180,72 @@
             }
 
             /**
-             * 开始跑分
+             * 开始跑分 (由事件触发)
              */
             function startBenchmark() {
-                // 禁用按钮，显示测试中
+                // 防止并发运行
+                if (isRunning) return;
+                isRunning = true;
+
+                // 更新按钮状态
                 btn.textContent = '测试中...';
                 btn.disabled = true;
                 scoreSpan.textContent = '运行中...';
                 scoreSpan.className = 'score waiting';
 
-                // 使用setTimeout延迟执行，让UI有机会更新
+                // 使用 setTimeout 让 UI 先更新，避免阻塞渲染
                 setTimeout(function() {
                     try {
-                        // 执行测试
                         const timeMs = runBenchmark();
-                        // 计算性能指数
                         const score = calcScore(timeMs);
                         // 显示结果
                         scoreSpan.textContent = formatNumber(score);
                         scoreSpan.className = 'score';
                     } catch (e) {
-                        // 异常处理
                         scoreSpan.textContent = '错误';
                         scoreSpan.className = 'score waiting';
                         console.error(e);
                     } finally {
-                        // 恢复按钮
                         btn.textContent = '开始跑分';
                         btn.disabled = false;
+                        isRunning = false;
                     }
                 }, 80);
             }
 
-            // 绑定点击事件
+            // ----- 事件绑定（兼容触屏和鼠标） -----
+            // 使用 click 事件（移动端也支持）
             btn.addEventListener('click', startBenchmark);
 
-            // 键盘支持：按空格或回车触发
+            // 为老人机增加 touchstart 辅助（防止部分浏览器 click 不触发）
+            // 但要注意防止重复触发，利用 isRunning 锁
+            btn.addEventListener('touchstart', function(e) {
+                // 不 preventDefault，让 click 也触发，但我们的 click 会检查 isRunning
+                // 这样可以保证只执行一次
+                // 如果 click 在 touch 后触发，isRunning 会阻止第二次
+                // 但有些设备可能只触发 touchstart 不触发 click，所以这里也主动调用
+                // 但调用前检查 isRunning 避免重复
+                if (!isRunning) {
+                    // 为了防止 click 再次触发，我们可以阻止默认，但那样可能影响其他
+                    // 更安全：使用一个标志，但简单起见，我们直接调用 startBenchmark，
+                    // 并且 startBenchmark 内部会检查 isRunning，所以不会重复
+                    startBenchmark();
+                }
+            }, { passive: true }); // passive 提高滚动性能
+
+            // 键盘支持（空格 / 回车）
             btn.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
+                    e.preventDefault(); // 防止空格滚动页面
                     if (!this.disabled) {
                         startBenchmark();
                     }
                 }
             });
 
-            // 页面加载完成后，将初始状态设置为"等待测试..."
-            // 此时scoreSpan已经是"等待测试..."，无需额外操作
-
+            // 初始化显示
+            scoreSpan.textContent = '等待测试...';
+            scoreSpan.className = 'score waiting';
         })();
     </script>
 
