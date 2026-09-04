@@ -374,6 +374,67 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* ===== 最值显示 ===== */
+        .extremum-box {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 20px;
+            background: #f2f7ff;
+            border: 1px solid #dae6f5;
+            border-radius: 18px;
+            padding: 12px 22px;
+            margin: 8px 0 16px 0;
+            min-height: 48px;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+        .extremum-box .ext-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e3a5f;
+            letter-spacing: 0.3px;
+        }
+        .extremum-box .ext-value {
+            font-size: 17px;
+            font-weight: 600;
+            color: #0b2b4a;
+            font-family: 'Courier New', monospace;
+            word-break: break-word;
+        }
+        .extremum-box .ext-value.max {
+            color: #c2410c;
+        }
+        .extremum-box .ext-value.min {
+            color: #0369a1;
+        }
+        .extremum-box .ext-value.constant {
+            color: #6b21a8;
+        }
+        .extremum-box .ext-value.none {
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .extremum-box .ext-tag {
+            display: inline-block;
+            padding: 2px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-right: 4px;
+        }
+        .extremum-box .ext-tag.max-tag {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .extremum-box .ext-tag.min-tag {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .extremum-box .ext-tag.constant-tag {
+            background: #f3e8ff;
+            color: #6b21a8;
+        }
+
         /* ===== Canvas ===== */
         .canvas-wrapper {
             position: relative;
@@ -473,6 +534,16 @@
                 font-size: 12px;
                 padding: 0 12px;
             }
+            .extremum-box {
+                padding: 10px 16px;
+                gap: 6px 12px;
+            }
+            .extremum-box .ext-label {
+                font-size: 14px;
+            }
+            .extremum-box .ext-value {
+                font-size: 15px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -541,6 +612,22 @@
                 font-size: 12px;
                 min-width: 36px;
             }
+            .extremum-box {
+                padding: 8px 12px;
+                gap: 4px 8px;
+                border-radius: 14px;
+                min-height: 40px;
+            }
+            .extremum-box .ext-label {
+                font-size: 13px;
+            }
+            .extremum-box .ext-value {
+                font-size: 13px;
+            }
+            .extremum-box .ext-tag {
+                font-size: 11px;
+                padding: 1px 10px;
+            }
         }
     </style>
 </head>
@@ -589,7 +676,7 @@
         <div class="card">
             <div class="card-title">
                 <span>📈 函数工具</span>
-                <span class="badge">绘图</span>
+                <span class="badge">绘图 + 最值</span>
             </div>
 
             <!-- 函数表达式 -->
@@ -607,15 +694,15 @@
             <div class="controls">
                 <div class="control-group">
                     <label>X轴</label>
-                    <input class="ctrl-input" id="rangeX" type="number" step="any" value="10" />
+                    <input class="ctrl-input" id="rangeX" type="number" step="any" value="25" />
                 </div>
                 <div class="control-group">
                     <label>Y轴</label>
-                    <input class="ctrl-input" id="rangeY" type="number" step="any" value="10" />
+                    <input class="ctrl-input" id="rangeY" type="number" step="any" value="25" />
                 </div>
                 <div class="control-group">
                     <label>精度</label>
-                    <input class="ctrl-input small" id="precision" type="number" step="any" min="0.0001" value="0.01" />
+                    <input class="ctrl-input small" id="precision" type="number" step="any" min="0.0001" value="0.001" />
                 </div>
 
                 <div class="btn-group">
@@ -631,6 +718,12 @@
                     <div class="progress-fill" id="progressFill" style="width:0%;"></div>
                 </div>
                 <span class="progress-label" id="progressLabel">0%</span>
+            </div>
+
+            <!-- ===== 最值显示 ===== -->
+            <div class="extremum-box" id="extremumBox">
+                <span class="ext-label">📊 最值：</span>
+                <span class="ext-value" id="extremumInfo">等待计算...</span>
             </div>
 
             <!-- Canvas -->
@@ -657,7 +750,6 @@
             const c = parseFloat(ec.value);
             const d = parseFloat(ed.value);
 
-            // 处理无效输入
             if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d)) {
                 x1Val.textContent = '—';
                 x2Val.textContent = '—';
@@ -666,11 +758,9 @@
                 return;
             }
 
-            // 方程: ax² + bx + c = d  =>  ax² + bx + (c - d) = 0
             const cd = c - d;
 
             if (Math.abs(a) < 1e-15) {
-                // 一次方程: bx + cd = 0  =>  bx = -cd
                 if (Math.abs(b) < 1e-15) {
                     if (Math.abs(cd) < 1e-15) {
                         x1Val.textContent = '无穷多解';
@@ -693,7 +783,6 @@
                 return;
             }
 
-            // 二次方程: ax² + bx + cd = 0
             const disc = b * b - 4 * a * cd;
             if (disc < -1e-15) {
                 x1Val.textContent = '无实数根';
@@ -724,19 +813,16 @@
         function formatNum(v) {
             if (Number.isInteger(v)) return v.toString();
             const s = v.toFixed(8);
-            // 去除多余的末尾0
             return parseFloat(s).toString();
         }
 
-        // 监听四个输入框
         [ea, eb, ec, ed].forEach(el => {
             el.addEventListener('input', solveQuadratic);
         });
-        // 初始计算
         solveQuadratic();
 
         // ============================================================
-        //  二、函数工具 — 绘图 + 进度条
+        //  二、函数工具 — 绘图 + 进度条 + 最值
         // ============================================================
         const fa = document.getElementById('fa');
         const fb = document.getElementById('fb');
@@ -749,6 +835,7 @@
         const progressLabel = document.getElementById('progressLabel');
         const canvas = document.getElementById('funcCanvas');
         const ctx = canvas.getContext('2d');
+        const extremumInfo = document.getElementById('extremumInfo');
 
         let isDrawing = false;
         let cancelDrawing = false;
@@ -758,15 +845,14 @@
             btn.addEventListener('click', function() {
                 const preset = parseInt(this.dataset.preset);
                 if (preset === 1) {
-                    rangeX.value = '10';
-                    rangeY.value = '10';
+                    rangeX.value = '25';
+                    rangeY.value = '25';
                     precision.value = '0.001';
                 } else if (preset === 2) {
                     rangeX.value = '100';
                     rangeY.value = '100';
                     precision.value = '0.005';
                 }
-                // 自动触发计算
                 startDraw();
             });
         });
@@ -774,11 +860,96 @@
         // ---------- 计算按钮 ----------
         calcBtn.addEventListener('click', startDraw);
 
+        // ---------- 计算并更新最值 ----------
+        function computeExtremum(a, b, c) {
+            const eps = 1e-15;
+
+            // 处理无效输入
+            if (isNaN(a) || isNaN(b) || isNaN(c)) {
+                return { type: 'error', msg: '请输入有效数值' };
+            }
+
+            // 常数函数: f(x) = c
+            if (Math.abs(a) < eps && Math.abs(b) < eps) {
+                return {
+                    type: 'constant',
+                    value: c,
+                    msg: `最值 y = ${formatNum(c)}（常数函数）`
+                };
+            }
+
+            // 一次函数: f(x) = bx + c (b ≠ 0)
+            if (Math.abs(a) < eps) {
+                return {
+                    type: 'none',
+                    msg: '无最值（一次函数）'
+                };
+            }
+
+            // 二次函数: f(x) = ax² + bx + c
+            const vertexX = -b / (2 * a);
+            const vertexY = a * vertexX * vertexX + b * vertexX + c;
+
+            if (a > 0) {
+                return {
+                    type: 'min',
+                    x: vertexX,
+                    y: vertexY,
+                    msg: `最小值 y = ${formatNum(vertexY)}，在 x = ${formatNum(vertexX)} 处取得`
+                };
+            } else {
+                return {
+                    type: 'max',
+                    x: vertexX,
+                    y: vertexY,
+                    msg: `最大值 y = ${formatNum(vertexY)}，在 x = ${formatNum(vertexX)} 处取得`
+                };
+            }
+        }
+
+        function updateExtremumDisplay(result) {
+            const el = extremumInfo;
+            // 清除所有类
+            el.className = 'ext-value';
+
+            if (result.type === 'error') {
+                el.textContent = result.msg;
+                el.className = 'ext-value none';
+                return;
+            }
+
+            if (result.type === 'none') {
+                el.textContent = result.msg;
+                el.className = 'ext-value none';
+                return;
+            }
+
+            if (result.type === 'constant') {
+                el.textContent = result.msg;
+                el.className = 'ext-value constant';
+                return;
+            }
+
+            if (result.type === 'max') {
+                el.textContent = result.msg;
+                el.className = 'ext-value max';
+                return;
+            }
+
+            if (result.type === 'min') {
+                el.textContent = result.msg;
+                el.className = 'ext-value min';
+                return;
+            }
+
+            el.textContent = '—';
+            el.className = 'ext-value';
+        }
+
         // ---------- 绘制主函数 ----------
         function startDraw() {
             if (isDrawing) {
                 cancelDrawing = true;
-                // 等待当前绘制结束再重新开始
                 const check = () => {
                     if (isDrawing) {
                         setTimeout(check, 50);
@@ -794,7 +965,6 @@
         }
 
         function doDraw() {
-            // 读取参数
             const a = parseFloat(fa.value);
             const b = parseFloat(fb.value);
             const c = parseFloat(fc.value);
@@ -810,7 +980,10 @@
                 return;
             }
 
-            // 计算总点数
+            // ---- 计算并更新最值 ----
+            const extremumResult = computeExtremum(a, b, c);
+            updateExtremumDisplay(extremumResult);
+
             const xMin = -xRange;
             const xMax = xRange;
             const yMin = -yRange;
@@ -836,12 +1009,10 @@
             const W = displayWidth;
             const H = displayHeight;
 
-            // 边距
             const pad = { top: 24, bottom: 32, left: 40, right: 24 };
             const plotW = W - pad.left - pad.right;
             const plotH = H - pad.top - pad.bottom;
 
-            // 坐标映射
             function toCanvasX(x) {
                 return pad.left + ((x - xMin) / (xMax - xMin)) * plotW;
             }
@@ -850,17 +1021,16 @@
                 return pad.top + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
             }
 
-            // ---------- 清空 & 背景 ----------
+            // 清空 & 背景
             ctx.clearRect(0, 0, W, H);
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, W, H);
 
-            // ---------- 绘制网格 ----------
+            // 网格
             ctx.save();
             ctx.strokeStyle = '#e8edf5';
             ctx.lineWidth = 0.8;
 
-            // X轴网格
             const xStep = calcStep(xMin, xMax, 8);
             for (let x = Math.ceil(xMin / xStep) * xStep; x <= xMax; x += xStep) {
                 if (Math.abs(x) < 1e-12) continue;
@@ -870,7 +1040,6 @@
                 ctx.lineTo(cx, pad.top + plotH);
                 ctx.stroke();
             }
-            // Y轴网格
             const yStep = calcStep(yMin, yMax, 8);
             for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) {
                 if (Math.abs(y) < 1e-12) continue;
@@ -882,18 +1051,16 @@
             }
             ctx.restore();
 
-            // ---------- 绘制坐标轴 ----------
+            // 坐标轴
             ctx.save();
             ctx.strokeStyle = '#2b4c7a';
             ctx.lineWidth = 1.8;
 
-            // X轴
             const axisY = toCanvasY(0);
             ctx.beginPath();
             ctx.moveTo(pad.left, axisY);
             ctx.lineTo(pad.left + plotW, axisY);
             ctx.stroke();
-            // 箭头
             ctx.beginPath();
             ctx.moveTo(pad.left + plotW, axisY);
             ctx.lineTo(pad.left + plotW - 10, axisY - 5);
@@ -902,13 +1069,11 @@
             ctx.fillStyle = '#2b4c7a';
             ctx.fill();
 
-            // Y轴
             const axisX = toCanvasX(0);
             ctx.beginPath();
             ctx.moveTo(axisX, pad.top);
             ctx.lineTo(axisX, pad.top + plotH);
             ctx.stroke();
-            // 箭头
             ctx.beginPath();
             ctx.moveTo(axisX, pad.top);
             ctx.lineTo(axisX - 5, pad.top + 10);
@@ -916,7 +1081,6 @@
             ctx.closePath();
             ctx.fill();
 
-            // 标签：x, y
             ctx.fillStyle = '#1a2b3c';
             ctx.font = '14px sans-serif';
             ctx.textAlign = 'left';
@@ -926,7 +1090,6 @@
             ctx.textBaseline = 'bottom';
             ctx.fillText('y', axisX - 8, pad.top + 2);
 
-            // 刻度标签
             ctx.font = '11px sans-serif';
             ctx.fillStyle = '#3d5a7a';
             ctx.textAlign = 'center';
@@ -943,40 +1106,33 @@
                 const cy = toCanvasY(y);
                 ctx.fillText(formatTick(y), axisX - 8, cy);
             }
-            // 原点
             ctx.textAlign = 'right';
             ctx.textBaseline = 'top';
             ctx.fillText('0', axisX - 6, axisY + 6);
             ctx.restore();
 
-            // ---------- 绘制函数（分批） ----------
+            // 绘制函数（分批）
             const batchCount = Math.min(100, Math.max(10, Math.ceil(totalPoints / 200)));
             const pointsPerBatch = Math.ceil(totalPoints / batchCount);
 
             let drawnPoints = 0;
             let currentBatch = 0;
-
-            // 存储所有点用于绘制
             const allPoints = [];
 
-            // 预计算所有点
             for (let i = 0; i < totalPoints; i++) {
                 const x = xMin + i * prec;
                 const y = a * x * x + b * x + c;
                 allPoints.push({ x, y });
             }
 
-            // 重置进度
             progressFill.style.width = '0%';
             progressLabel.textContent = '0%';
             isDrawing = true;
             cancelDrawing = false;
             calcBtn.disabled = true;
 
-            // 分批绘制
             function drawBatch() {
                 if (cancelDrawing || currentBatch >= batchCount) {
-                    // 完成
                     isDrawing = false;
                     calcBtn.disabled = false;
                     if (cancelDrawing) {
@@ -990,7 +1146,6 @@
                 const startIdx = currentBatch * pointsPerBatch;
                 const endIdx = Math.min(startIdx + pointsPerBatch, totalPoints);
 
-                // 绘制这一批的点
                 ctx.save();
                 ctx.strokeStyle = '#2563eb';
                 ctx.lineWidth = 2.2;
@@ -1002,7 +1157,6 @@
                     const cx = toCanvasX(p.x);
                     const cy = toCanvasY(p.y);
 
-                    // 检查是否在可视范围内（裁剪到画布边界）
                     if (p.y >= yMin && p.y <= yMax && isFinite(p.y)) {
                         if (!started) {
                             ctx.moveTo(cx, cy);
@@ -1011,7 +1165,6 @@
                             ctx.lineTo(cx, cy);
                         }
                     } else {
-                        // 如果当前点不可见，断开路径
                         if (started) {
                             ctx.stroke();
                             ctx.beginPath();
@@ -1024,23 +1177,19 @@
                 }
                 ctx.restore();
 
-                // 更新进度
                 drawnPoints += (endIdx - startIdx);
                 const progress = Math.min(100, Math.floor((drawnPoints / totalPoints) * 100));
                 progressFill.style.width = progress + '%';
                 progressLabel.textContent = progress + '%';
 
                 currentBatch++;
-
-                // 调度下一批
                 requestAnimationFrame(drawBatch);
             }
 
-            // 开始绘制
             requestAnimationFrame(drawBatch);
         }
 
-        // ---------- 辅助：计算合适的刻度步长 ----------
+        // ---------- 辅助函数 ----------
         function calcStep(minVal, maxVal, targetTicks) {
             const range = maxVal - minVal;
             if (range < 1e-15) return 1;
@@ -1067,41 +1216,46 @@
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
                 if (!isDrawing) {
-                    // 如果当前没有绘制，重绘最后一次的内容（但这里简单处理：清除画布）
-                    // 更好的做法是保存状态，但为了简化，我们只清除
-                    const rect = canvas.parentElement.getBoundingClientRect();
-                    if (rect.width > 0) {
-                        // 如果画布不为空，重绘提示
-                        const W = canvas.parentElement.clientWidth;
-                        const H = W * (10 / 16);
-                        canvas.style.width = W + 'px';
-                        canvas.style.height = H + 'px';
-                        canvas.width = W * (window.devicePixelRatio || 1);
-                        canvas.height = H * (window.devicePixelRatio || 1);
-                        const dpr = window.devicePixelRatio || 1;
-                        ctx.scale(dpr, dpr);
-                        ctx.clearRect(0, 0, W, H);
-                        ctx.fillStyle = '#fafdff';
-                        ctx.fillRect(0, 0, W, H);
-                        ctx.fillStyle = '#8aa4c0';
-                        ctx.font = '16px sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText('调整窗口后请重新计算', W / 2, H / 2);
-                    }
+                    const W = canvas.parentElement.clientWidth;
+                    const H = W * (10 / 16);
+                    canvas.style.width = W + 'px';
+                    canvas.style.height = H + 'px';
+                    canvas.width = W * (window.devicePixelRatio || 1);
+                    canvas.height = H * (window.devicePixelRatio || 1);
+                    const dpr = window.devicePixelRatio || 1;
+                    ctx.scale(dpr, dpr);
+                    ctx.clearRect(0, 0, W, H);
+                    ctx.fillStyle = '#fafdff';
+                    ctx.fillRect(0, 0, W, H);
+                    ctx.fillStyle = '#8aa4c0';
+                    ctx.font = '16px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('调整窗口后请重新计算', W / 2, H / 2);
                 }
             }, 300);
         });
 
-        // ---------- 初始绘制 ----------
-        // 页面加载后自动绘制一次
+        // ---------- 页面加载默认预设1 ----------
         window.addEventListener('load', () => {
+            // 确保预设1的参数（已在HTML中默认设为25, 25, 0.001）
+            // 但为了保险，再显式设置一次
+            rangeX.value = '25';
+            rangeY.value = '25';
+            precision.value = '0.001';
+            // 同时更新最值显示
+            const a = parseFloat(fa.value) || 0;
+            const b = parseFloat(fb.value) || 0;
+            const c = parseFloat(fc.value) || 0;
+            const result = computeExtremum(a, b, c);
+            updateExtremumDisplay(result);
+            // 延迟启动绘制，确保DOM完全渲染
             setTimeout(() => {
                 startDraw();
-            }, 300);
+            }, 400);
         });
 
-        // 如果用户调整了输入框，按回车触发绘制
+        // 如果用户修改系数，按回车触发绘制
         [fa, fb, fc, rangeX, rangeY, precision].forEach(el => {
             el.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
@@ -1109,9 +1263,21 @@
                     startDraw();
                 }
             });
+            // 输入时实时更新最值（但仅当数值有效且不在绘制中）
+            el.addEventListener('input', () => {
+                if (!isDrawing) {
+                    const a = parseFloat(fa.value);
+                    const b = parseFloat(fb.value);
+                    const c = parseFloat(fc.value);
+                    if (!isNaN(a) && !isNaN(b) && !isNaN(c)) {
+                        const result = computeExtremum(a, b, c);
+                        updateExtremumDisplay(result);
+                    }
+                }
+            });
         });
 
-        console.log('✅ 25.2.1 配方法工具已加载');
+        console.log('✅ 25.2.1 配方法工具已加载（含最值功能，预设1=25/25）');
     </script>
 </body>
 </html>
