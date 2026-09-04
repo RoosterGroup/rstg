@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>25.2.1 配方法工具</title>
+    <style>
+        /* ===== 全局重置 & 基础 ===== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(145deg, #f6f9fc 0%, #e9f1f8 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px 16px;
+        }
+
+        .app-container {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.80);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0, 20, 40, 0.12), 0 8px 24px rgba(0, 0, 0, 0.04);
+            padding: 32px 36px 40px;
+            transition: all 0.2s ease;
+        }
+
+        /* ===== 标题 ===== */
+        .main-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a2b3c;
+            letter-spacing: 1px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #3b82f6;
+            display: inline-block;
+            margin-bottom: 28px;
+            background: linear-gradient(135deg, #1e3a6f, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ===== 卡片通用 ===== */
+        .card {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 24px 28px 30px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: box-shadow 0.2s ease;
+        }
+        .card:last-child {
+            margin-bottom: 0;
+        }
+        .card:hover {
+            box-shadow: 0 8px 30px rgba(0, 20, 40, 0.06);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e3a5f;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-title .badge {
+            background: #3b82f6;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 0 14px;
+            border-radius: 30px;
+            line-height: 26px;
+        }
+
+        /* ===== 求值：式子行 ===== */
+        .formula-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 4px;
+            font-size: 22px;
+            font-weight: 500;
+            color: #1a2b3c;
+            background: #f8faff;
+            padding: 16px 20px;
+            border-radius: 18px;
+            border: 1px solid #e8edf5;
+            margin-bottom: 18px;
+        }
+        .formula-row .var-input {
+            width: 60px;
+            height: 44px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: #0b2b4a;
+            border: none;
+            border-bottom: 3px solid #b3c9e0;
+            background: transparent;
+            outline: none;
+            transition: border-color 0.2s ease, background 0.2s ease;
+            border-radius: 0;
+            padding: 0 2px;
+            font-family: inherit;
+        }
+        .formula-row .var-input:focus {
+            border-bottom-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.04);
+        }
+        .formula-row .var-input::placeholder {
+            color: #b0c4d9;
+            font-weight: 300;
+            font-size: 14px;
+        }
+        .formula-row .var-input.small {
+            width: 48px;
+        }
+        .formula-row .var-input.tiny {
+            width: 40px;
+        }
+        .formula-row .op {
+            color: #4a6a8a;
+            margin: 0 2px;
+        }
+        .formula-row .eq {
+            color: #1e3a5f;
+            font-weight: 700;
+            margin: 0 4px;
+        }
+
+        /* ===== 求值结果 ===== */
+        .result-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px 40px;
+            padding: 12px 6px 4px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #1a2b3c;
+        }
+        .result-box .x-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f0f6fe;
+            padding: 6px 18px 6px 14px;
+            border-radius: 40px;
+            border: 1px solid #dbe6f2;
+        }
+        .result-box .x-item .label {
+            color: #2b4c7a;
+            font-weight: 600;
+        }
+        .result-box .x-item .value {
+            font-weight: 700;
+            color: #0b2b4a;
+            min-width: 60px;
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+        }
+        .result-box .x-item .value.none {
+            color: #b91c1c;
+            font-weight: 500;
+            font-size: 16px;
+        }
+        .result-box .x-item .value.infinite {
+            color: #0f7b3a;
+            font-weight: 500;
+        }
+
+        /* ===== 函数工具：输入 ===== */
+        .func-formula-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 4px;
+            font-size: 22px;
+            font-weight: 500;
+            color: #1a2b3c;
+            background: #f8faff;
+            padding: 14px 20px;
+            border-radius: 18px;
+            border: 1px solid #e8edf5;
+            margin-bottom: 20px;
+        }
+        .func-formula-row .var-input {
+            width: 60px;
+            height: 44px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: #0b2b4a;
+            border: none;
+            border-bottom: 3px solid #b3c9e0;
+            background: transparent;
+            outline: none;
+            transition: border-color 0.2s ease, background 0.2s ease;
+            border-radius: 0;
+            padding: 0 2px;
+            font-family: inherit;
+        }
+        .func-formula-row .var-input:focus {
+            border-bottom-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.04);
+        }
+        .func-formula-row .var-input::placeholder {
+            color: #b0c4d9;
+            font-weight: 300;
+            font-size: 14px;
+        }
+
+        /* ===== 控制面板 ===== */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px 20px;
+            margin-bottom: 18px;
+            padding: 8px 4px;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 6px 12px;
+            flex-wrap: wrap;
+        }
+        .control-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2b4c7a;
+            white-space: nowrap;
+        }
+        .control-group .ctrl-input {
+            width: 64px;
+            height: 34px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 500;
+            color: #0b2b4a;
+            border: 1.5px solid #d0ddee;
+            border-radius: 10px;
+            background: #ffffff;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            font-family: inherit;
+            padding: 0 4px;
+        }
+        .control-group .ctrl-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+        .control-group .ctrl-input.small {
+            width: 56px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-left: auto;
+            align-items: center;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 22px;
+            height: 40px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #eef3fa;
+            color: #1e3a5f;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 20, 40, 0.08);
+        }
+        .btn:active {
+            transform: translateY(0px);
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.30);
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid #cbdae9;
+            color: #1e3a5f;
+        }
+        .btn-outline:hover {
+            background: #f0f6fe;
+            border-color: #3b82f6;
+        }
+        .btn-preset {
+            background: #e8f0fe;
+            color: #1e4a7a;
+            font-weight: 500;
+            font-size: 13px;
+            padding: 0 16px;
+            height: 34px;
+            border: 1px solid #c8daf0;
+        }
+        .btn-preset:hover {
+            background: #d4e4fc;
+            border-color: #3b82f6;
+        }
+        .btn-preset.active {
+            background: #3b82f6;
+            color: #fff;
+            border-color: #3b82f6;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* ===== 进度条 ===== */
+        .progress-wrapper {
+            width: 100%;
+            margin: 10px 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .progress-track {
+            flex: 1;
+            height: 8px;
+            background: #e4ebf5;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            border-radius: 30px;
+            transition: width 0.08s linear;
+        }
+        .progress-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e3a5f;
+            min-width: 48px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ===== Canvas ===== */
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #e2ecf7;
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            margin-top: 6px;
+        }
+        .canvas-wrapper canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16 / 10;
+            background: #ffffff;
+            touch-action: none;
+        }
+
+        .canvas-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 16 / 10;
+            width: 100%;
+            color: #8aa4c0;
+            font-size: 16px;
+            font-weight: 400;
+            background: #fafdff;
+            border-radius: 20px;
+            flex-direction: column;
+            gap: 8px;
+            border: 1px dashed #c8daf0;
+        }
+        .canvas-placeholder svg {
+            opacity: 0.3;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 20px 16px 28px;
+                border-radius: 28px;
+            }
+            .main-title {
+                font-size: 22px;
+            }
+            .formula-row,
+            .func-formula-row {
+                font-size: 18px;
+                padding: 12px 14px;
+                gap: 4px 2px;
+            }
+            .formula-row .var-input,
+            .func-formula-row .var-input {
+                width: 48px;
+                height: 38px;
+                font-size: 17px;
+            }
+            .formula-row .var-input.small {
+                width: 40px;
+            }
+            .formula-row .var-input.tiny {
+                width: 34px;
+            }
+            .card {
+                padding: 18px 16px 22px;
+            }
+            .controls {
+                gap: 10px 12px;
+            }
+            .btn-group {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .result-box {
+                font-size: 16px;
+                gap: 12px 20px;
+            }
+            .control-group .ctrl-input {
+                width: 56px;
+                height: 32px;
+                font-size: 14px;
+            }
+            .control-group .ctrl-input.small {
+                width: 48px;
+            }
+            .btn {
+                height: 36px;
+                font-size: 14px;
+                padding: 0 16px;
+            }
+            .btn-preset {
+                height: 30px;
+                font-size: 12px;
+                padding: 0 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app-container {
+                padding: 14px 10px 20px;
+                border-radius: 20px;
+            }
+            .formula-row,
+            .func-formula-row {
+                font-size: 15px;
+                padding: 10px 8px;
+                gap: 3px 1px;
+            }
+            .formula-row .var-input,
+            .func-formula-row .var-input {
+                width: 38px;
+                height: 32px;
+                font-size: 15px;
+            }
+            .formula-row .var-input.small {
+                width: 32px;
+            }
+            .formula-row .var-input.tiny {
+                width: 28px;
+            }
+            .card {
+                padding: 14px 10px 18px;
+                border-radius: 18px;
+            }
+            .result-box {
+                font-size: 14px;
+                gap: 8px 12px;
+            }
+            .result-box .x-item {
+                padding: 4px 12px 4px 10px;
+            }
+            .result-box .x-item .value {
+                font-size: 16px;
+                min-width: 40px;
+            }
+            .controls {
+                gap: 8px 8px;
+            }
+            .control-group label {
+                font-size: 12px;
+            }
+            .control-group .ctrl-input {
+                width: 48px;
+                height: 28px;
+                font-size: 13px;
+            }
+            .control-group .ctrl-input.small {
+                width: 40px;
+            }
+            .btn {
+                height: 32px;
+                font-size: 12px;
+                padding: 0 12px;
+            }
+            .btn-preset {
+                height: 28px;
+                font-size: 11px;
+                padding: 0 10px;
+            }
+            .progress-label {
+                font-size: 12px;
+                min-width: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- 标题 -->
+        <h1 class="main-title">25.2.1 配方法工具</h1>
+
+        <!-- ========================================= -->
+        <!-- 一、求值 -->
+        <!-- ========================================= -->
+        <div class="card">
+            <div class="card-title">
+                <span>📐 求值</span>
+                <span class="badge">实时</span>
+            </div>
+
+            <div class="formula-row" id="evalFormula">
+                <input class="var-input" id="ea" type="number" step="any" value="1" placeholder="a" />
+                <span class="op">x²</span>
+                <span class="op">+</span>
+                <input class="var-input" id="eb" type="number" step="any" value="2" placeholder="b" />
+                <span class="op">x</span>
+                <span class="op">+</span>
+                <input class="var-input" id="ec" type="number" step="any" value="-3" placeholder="c" />
+                <span class="eq">=</span>
+                <input class="var-input" id="ed" type="number" step="any" value="0" placeholder="d" />
+            </div>
+
+            <div class="result-box" id="evalResult">
+                <div class="x-item">
+                    <span class="label">x₁ =</span>
+                    <span class="value" id="x1Val">—</span>
+                </div>
+                <div class="x-item">
+                    <span class="label">x₂ =</span>
+                    <span class="value" id="x2Val">—</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================= -->
+        <!-- 二、函数工具 -->
+        <!-- ========================================= -->
+        <div class="card">
+            <div class="card-title">
+                <span>📈 函数工具</span>
+                <span class="badge">绘图</span>
+            </div>
+
+            <!-- 函数表达式 -->
+            <div class="func-formula-row" id="funcFormula">
+                <input class="var-input" id="fa" type="number" step="any" value="1" placeholder="a" />
+                <span class="op">x²</span>
+                <span class="op">+</span>
+                <input class="var-input" id="fb" type="number" step="any" value="0" placeholder="b" />
+                <span class="op">x</span>
+                <span class="op">+</span>
+                <input class="var-input" id="fc" type="number" step="any" value="0" placeholder="c" />
+            </div>
+
+            <!-- 控制面板 -->
+            <div class="controls">
+                <div class="control-group">
+                    <label>X轴</label>
+                    <input class="ctrl-input" id="rangeX" type="number" step="any" value="10" />
+                </div>
+                <div class="control-group">
+                    <label>Y轴</label>
+                    <input class="ctrl-input" id="rangeY" type="number" step="any" value="10" />
+                </div>
+                <div class="control-group">
+                    <label>精度</label>
+                    <input class="ctrl-input small" id="precision" type="number" step="any" min="0.0001" value="0.01" />
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-preset" data-preset="1">预设1</button>
+                    <button class="btn btn-preset" data-preset="2">预设2</button>
+                    <button class="btn btn-primary" id="calcBtn">▶ 计算</button>
+                </div>
+            </div>
+
+            <!-- 进度条 -->
+            <div class="progress-wrapper">
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill" style="width:0%;"></div>
+                </div>
+                <span class="progress-label" id="progressLabel">0%</span>
+            </div>
+
+            <!-- Canvas -->
+            <div class="canvas-wrapper">
+                <canvas id="funcCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  一、求值 — 实时计算
+        // ============================================================
+        const ea = document.getElementById('ea');
+        const eb = document.getElementById('eb');
+        const ec = document.getElementById('ec');
+        const ed = document.getElementById('ed');
+        const x1Val = document.getElementById('x1Val');
+        const x2Val = document.getElementById('x2Val');
+
+        function solveQuadratic() {
+            const a = parseFloat(ea.value);
+            const b = parseFloat(eb.value);
+            const c = parseFloat(ec.value);
+            const d = parseFloat(ed.value);
+
+            // 处理无效输入
+            if (isNaN(a) || isNaN(b) || isNaN(c) || isNaN(d)) {
+                x1Val.textContent = '—';
+                x2Val.textContent = '—';
+                x1Val.className = 'value';
+                x2Val.className = 'value';
+                return;
+            }
+
+            // 方程: ax² + bx + c = d  =>  ax² + bx + (c - d) = 0
+            const cd = c - d;
+
+            if (Math.abs(a) < 1e-15) {
+                // 一次方程: bx + cd = 0  =>  bx = -cd
+                if (Math.abs(b) < 1e-15) {
+                    if (Math.abs(cd) < 1e-15) {
+                        x1Val.textContent = '无穷多解';
+                        x1Val.className = 'value infinite';
+                        x2Val.textContent = '—';
+                        x2Val.className = 'value';
+                    } else {
+                        x1Val.textContent = '无解';
+                        x1Val.className = 'value none';
+                        x2Val.textContent = '—';
+                        x2Val.className = 'value';
+                    }
+                } else {
+                    const x = -cd / b;
+                    x1Val.textContent = formatNum(x);
+                    x1Val.className = 'value';
+                    x2Val.textContent = '—';
+                    x2Val.className = 'value';
+                }
+                return;
+            }
+
+            // 二次方程: ax² + bx + cd = 0
+            const disc = b * b - 4 * a * cd;
+            if (disc < -1e-15) {
+                x1Val.textContent = '无实数根';
+                x1Val.className = 'value none';
+                x2Val.textContent = '无实数根';
+                x2Val.className = 'value none';
+                return;
+            }
+
+            if (Math.abs(disc) < 1e-15) {
+                const x = -b / (2 * a);
+                x1Val.textContent = formatNum(x);
+                x1Val.className = 'value';
+                x2Val.textContent = formatNum(x) + ' (重根)';
+                x2Val.className = 'value';
+                return;
+            }
+
+            const sqrtDisc = Math.sqrt(disc);
+            const x1 = (-b - sqrtDisc) / (2 * a);
+            const x2 = (-b + sqrtDisc) / (2 * a);
+            x1Val.textContent = formatNum(x1);
+            x1Val.className = 'value';
+            x2Val.textContent = formatNum(x2);
+            x2Val.className = 'value';
+        }
+
+        function formatNum(v) {
+            if (Number.isInteger(v)) return v.toString();
+            const s = v.toFixed(8);
+            // 去除多余的末尾0
+            return parseFloat(s).toString();
+        }
+
+        // 监听四个输入框
+        [ea, eb, ec, ed].forEach(el => {
+            el.addEventListener('input', solveQuadratic);
+        });
+        // 初始计算
+        solveQuadratic();
+
+        // ============================================================
+        //  二、函数工具 — 绘图 + 进度条
+        // ============================================================
+        const fa = document.getElementById('fa');
+        const fb = document.getElementById('fb');
+        const fc = document.getElementById('fc');
+        const rangeX = document.getElementById('rangeX');
+        const rangeY = document.getElementById('rangeY');
+        const precision = document.getElementById('precision');
+        const calcBtn = document.getElementById('calcBtn');
+        const progressFill = document.getElementById('progressFill');
+        const progressLabel = document.getElementById('progressLabel');
+        const canvas = document.getElementById('funcCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let isDrawing = false;
+        let cancelDrawing = false;
+
+        // ---------- 预设 ----------
+        document.querySelectorAll('.btn-preset').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const preset = parseInt(this.dataset.preset);
+                if (preset === 1) {
+                    rangeX.value = '10';
+                    rangeY.value = '10';
+                    precision.value = '0.001';
+                } else if (preset === 2) {
+                    rangeX.value = '100';
+                    rangeY.value = '100';
+                    precision.value = '0.005';
+                }
+                // 自动触发计算
+                startDraw();
+            });
+        });
+
+        // ---------- 计算按钮 ----------
+        calcBtn.addEventListener('click', startDraw);
+
+        // ---------- 绘制主函数 ----------
+        function startDraw() {
+            if (isDrawing) {
+                cancelDrawing = true;
+                // 等待当前绘制结束再重新开始
+                const check = () => {
+                    if (isDrawing) {
+                        setTimeout(check, 50);
+                    } else {
+                        cancelDrawing = false;
+                        doDraw();
+                    }
+                };
+                check();
+                return;
+            }
+            doDraw();
+        }
+
+        function doDraw() {
+            // 读取参数
+            const a = parseFloat(fa.value);
+            const b = parseFloat(fb.value);
+            const c = parseFloat(fc.value);
+            const xRange = parseFloat(rangeX.value);
+            const yRange = parseFloat(rangeY.value);
+            const prec = parseFloat(precision.value);
+
+            if (isNaN(a) || isNaN(b) || isNaN(c) ||
+                isNaN(xRange) || xRange <= 0 ||
+                isNaN(yRange) || yRange <= 0 ||
+                isNaN(prec) || prec <= 0) {
+                alert('请输入有效的数值（范围 > 0，精度 > 0）');
+                return;
+            }
+
+            // 计算总点数
+            const xMin = -xRange;
+            const xMax = xRange;
+            const yMin = -yRange;
+            const yMax = yRange;
+            const totalPoints = Math.floor((xMax - xMin) / prec) + 1;
+
+            if (totalPoints < 2) {
+                alert('精度太高或范围太小，无法绘制');
+                return;
+            }
+
+            // 准备画布
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            const displayWidth = canvas.parentElement.clientWidth;
+            const displayHeight = displayWidth * (10 / 16);
+            canvas.width = displayWidth * dpr;
+            canvas.height = displayHeight * dpr;
+            canvas.style.width = displayWidth + 'px';
+            canvas.style.height = displayHeight + 'px';
+            ctx.scale(dpr, dpr);
+
+            const W = displayWidth;
+            const H = displayHeight;
+
+            // 边距
+            const pad = { top: 24, bottom: 32, left: 40, right: 24 };
+            const plotW = W - pad.left - pad.right;
+            const plotH = H - pad.top - pad.bottom;
+
+            // 坐标映射
+            function toCanvasX(x) {
+                return pad.left + ((x - xMin) / (xMax - xMin)) * plotW;
+            }
+
+            function toCanvasY(y) {
+                return pad.top + plotH - ((y - yMin) / (yMax - yMin)) * plotH;
+            }
+
+            // ---------- 清空 & 背景 ----------
+            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, W, H);
+
+            // ---------- 绘制网格 ----------
+            ctx.save();
+            ctx.strokeStyle = '#e8edf5';
+            ctx.lineWidth = 0.8;
+
+            // X轴网格
+            const xStep = calcStep(xMin, xMax, 8);
+            for (let x = Math.ceil(xMin / xStep) * xStep; x <= xMax; x += xStep) {
+                if (Math.abs(x) < 1e-12) continue;
+                const cx = toCanvasX(x);
+                ctx.beginPath();
+                ctx.moveTo(cx, pad.top);
+                ctx.lineTo(cx, pad.top + plotH);
+                ctx.stroke();
+            }
+            // Y轴网格
+            const yStep = calcStep(yMin, yMax, 8);
+            for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) {
+                if (Math.abs(y) < 1e-12) continue;
+                const cy = toCanvasY(y);
+                ctx.beginPath();
+                ctx.moveTo(pad.left, cy);
+                ctx.lineTo(pad.left + plotW, cy);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            // ---------- 绘制坐标轴 ----------
+            ctx.save();
+            ctx.strokeStyle = '#2b4c7a';
+            ctx.lineWidth = 1.8;
+
+            // X轴
+            const axisY = toCanvasY(0);
+            ctx.beginPath();
+            ctx.moveTo(pad.left, axisY);
+            ctx.lineTo(pad.left + plotW, axisY);
+            ctx.stroke();
+            // 箭头
+            ctx.beginPath();
+            ctx.moveTo(pad.left + plotW, axisY);
+            ctx.lineTo(pad.left + plotW - 10, axisY - 5);
+            ctx.lineTo(pad.left + plotW - 10, axisY + 5);
+            ctx.closePath();
+            ctx.fillStyle = '#2b4c7a';
+            ctx.fill();
+
+            // Y轴
+            const axisX = toCanvasX(0);
+            ctx.beginPath();
+            ctx.moveTo(axisX, pad.top);
+            ctx.lineTo(axisX, pad.top + plotH);
+            ctx.stroke();
+            // 箭头
+            ctx.beginPath();
+            ctx.moveTo(axisX, pad.top);
+            ctx.lineTo(axisX - 5, pad.top + 10);
+            ctx.lineTo(axisX + 5, pad.top + 10);
+            ctx.closePath();
+            ctx.fill();
+
+            // 标签：x, y
+            ctx.fillStyle = '#1a2b3c';
+            ctx.font = '14px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText('x', pad.left + plotW - 4, axisY + 6);
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText('y', axisX - 8, pad.top + 2);
+
+            // 刻度标签
+            ctx.font = '11px sans-serif';
+            ctx.fillStyle = '#3d5a7a';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            for (let x = Math.ceil(xMin / xStep) * xStep; x <= xMax; x += xStep) {
+                if (Math.abs(x) < 1e-12) continue;
+                const cx = toCanvasX(x);
+                ctx.fillText(formatTick(x), cx, axisY + 6);
+            }
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax; y += yStep) {
+                if (Math.abs(y) < 1e-12) continue;
+                const cy = toCanvasY(y);
+                ctx.fillText(formatTick(y), axisX - 8, cy);
+            }
+            // 原点
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'top';
+            ctx.fillText('0', axisX - 6, axisY + 6);
+            ctx.restore();
+
+            // ---------- 绘制函数（分批） ----------
+            const batchCount = Math.min(100, Math.max(10, Math.ceil(totalPoints / 200)));
+            const pointsPerBatch = Math.ceil(totalPoints / batchCount);
+
+            let drawnPoints = 0;
+            let currentBatch = 0;
+
+            // 存储所有点用于绘制
+            const allPoints = [];
+
+            // 预计算所有点
+            for (let i = 0; i < totalPoints; i++) {
+                const x = xMin + i * prec;
+                const y = a * x * x + b * x + c;
+                allPoints.push({ x, y });
+            }
+
+            // 重置进度
+            progressFill.style.width = '0%';
+            progressLabel.textContent = '0%';
+            isDrawing = true;
+            cancelDrawing = false;
+            calcBtn.disabled = true;
+
+            // 分批绘制
+            function drawBatch() {
+                if (cancelDrawing || currentBatch >= batchCount) {
+                    // 完成
+                    isDrawing = false;
+                    calcBtn.disabled = false;
+                    if (cancelDrawing) {
+                        cancelDrawing = false;
+                        progressFill.style.width = '0%';
+                        progressLabel.textContent = '0%';
+                    }
+                    return;
+                }
+
+                const startIdx = currentBatch * pointsPerBatch;
+                const endIdx = Math.min(startIdx + pointsPerBatch, totalPoints);
+
+                // 绘制这一批的点
+                ctx.save();
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 2.2;
+                ctx.beginPath();
+
+                let started = false;
+                for (let i = startIdx; i < endIdx; i++) {
+                    const p = allPoints[i];
+                    const cx = toCanvasX(p.x);
+                    const cy = toCanvasY(p.y);
+
+                    // 检查是否在可视范围内（裁剪到画布边界）
+                    if (p.y >= yMin && p.y <= yMax && isFinite(p.y)) {
+                        if (!started) {
+                            ctx.moveTo(cx, cy);
+                            started = true;
+                        } else {
+                            ctx.lineTo(cx, cy);
+                        }
+                    } else {
+                        // 如果当前点不可见，断开路径
+                        if (started) {
+                            ctx.stroke();
+                            ctx.beginPath();
+                            started = false;
+                        }
+                    }
+                }
+                if (started) {
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                // 更新进度
+                drawnPoints += (endIdx - startIdx);
+                const progress = Math.min(100, Math.floor((drawnPoints / totalPoints) * 100));
+                progressFill.style.width = progress + '%';
+                progressLabel.textContent = progress + '%';
+
+                currentBatch++;
+
+                // 调度下一批
+                requestAnimationFrame(drawBatch);
+            }
+
+            // 开始绘制
+            requestAnimationFrame(drawBatch);
+        }
+
+        // ---------- 辅助：计算合适的刻度步长 ----------
+        function calcStep(minVal, maxVal, targetTicks) {
+            const range = maxVal - minVal;
+            if (range < 1e-15) return 1;
+            let rough = range / targetTicks;
+            const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+            let normalized = rough / mag;
+            let step;
+            if (normalized < 1.5) step = 1;
+            else if (normalized < 3.5) step = 2;
+            else if (normalized < 7.5) step = 5;
+            else step = 10;
+            return step * mag;
+        }
+
+        function formatTick(v) {
+            if (Number.isInteger(v)) return v.toString();
+            const s = v.toFixed(4);
+            return parseFloat(s).toString();
+        }
+
+        // ---------- 窗口变化重绘 ----------
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (!isDrawing) {
+                    // 如果当前没有绘制，重绘最后一次的内容（但这里简单处理：清除画布）
+                    // 更好的做法是保存状态，但为了简化，我们只清除
+                    const rect = canvas.parentElement.getBoundingClientRect();
+                    if (rect.width > 0) {
+                        // 如果画布不为空，重绘提示
+                        const W = canvas.parentElement.clientWidth;
+                        const H = W * (10 / 16);
+                        canvas.style.width = W + 'px';
+                        canvas.style.height = H + 'px';
+                        canvas.width = W * (window.devicePixelRatio || 1);
+                        canvas.height = H * (window.devicePixelRatio || 1);
+                        const dpr = window.devicePixelRatio || 1;
+                        ctx.scale(dpr, dpr);
+                        ctx.clearRect(0, 0, W, H);
+                        ctx.fillStyle = '#fafdff';
+                        ctx.fillRect(0, 0, W, H);
+                        ctx.fillStyle = '#8aa4c0';
+                        ctx.font = '16px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('调整窗口后请重新计算', W / 2, H / 2);
+                    }
+                }
+            }, 300);
+        });
+
+        // ---------- 初始绘制 ----------
+        // 页面加载后自动绘制一次
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                startDraw();
+            }, 300);
+        });
+
+        // 如果用户调整了输入框，按回车触发绘制
+        [fa, fb, fc, rangeX, rangeY, precision].forEach(el => {
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    startDraw();
+                }
+            });
+        });
+
+        console.log('✅ 25.2.1 配方法工具已加载');
+    </script>
+</body>
+</html>
