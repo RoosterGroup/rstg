@@ -1,0 +1,2672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>战力增量 v0.2.3</title>
+    <script src="https://cdn.jsdelivr.net/npm/break_eternity.js">
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, sans-serif;
+        }
+        body {
+            background: #000412;
+            color: #e6edf7;
+            overflow: hidden;
+            height: 100vh;
+            user-select: none;
+            transition: background .3s;
+        }
+        .page {
+            display: none;
+            padding: 16px 20px 12px;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .page.active {
+            display: block;
+        }
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 12px 24px;
+            background: #1e293b;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background .2s;
+        }
+        .tab.active {
+            background: #2563eb;
+        }
+        .tab.hidden {
+            display: none;
+        }
+        .sub-tab-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .sub-tab {
+            padding: 8px 16px;
+            background: #1a2332;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background .2s;
+            color: #94a3b8;
+        }
+        .sub-tab.active {
+            background: #1e3a6a;
+            color: #e6edf7;
+        }
+        .sub-page {
+            display: none;
+        }
+        .sub-page.active {
+            display: block;
+        }
+        .top-bar {
+            text-align: center;
+            padding: 4px 0 6px;
+        }
+        .top-bar .label {
+            font-size: 16px;
+        }
+        .top-bar .label.power-label {
+            color: #2563eb;
+        }
+        .top-bar .label.karma-label {
+            color: #dc2626;
+        }
+        .power-display {
+            font-size: 34px;
+            font-family: Consolas, monospace;
+            color: #2563eb;
+            word-break: break-all;
+        }
+        .karma-display {
+            font-size: 22px;
+            font-family: Consolas, monospace;
+            color: #dc2626;
+            word-break: break-all;
+            margin-top: 2px;
+        }
+        .center-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 580px);
+            min-height: 100px;
+        }
+        .click-btn {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: none;
+            background: #1e40af;
+            color: #fff;
+            font-size: 26px;
+            cursor: pointer;
+            box-shadow: 0 0 36px #2563eb80;
+            transition: transform .12s, background .2s;
+            margin-bottom: 12px;
+        }
+        .click-btn:active {
+            transform: scale(.92);
+            background: #2563eb;
+        }
+        .click-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .bottom-controls {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            right: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        .btn-row {
+            display: grid;
+            gap: 12px;
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .btn-row .btn {
+            padding: 16px 20px;
+            font-size: 17px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            transition: transform .1s, opacity .2s;
+            line-height: 1.4;
+            text-align: center;
+            min-width: 0;
+        }
+        .btn-row .btn:active {
+            transform: scale(.94);
+        }
+        .btn-row .btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-row .btn small {
+            display: block;
+            font-size: 12px;
+            opacity: .85;
+            font-weight: 400;
+        }
+        .btn-red {
+            background: #991b1b;
+        }
+        .btn-green {
+            background: #15803d;
+        }
+        .btn-blue {
+            background: #1e40af;
+        }
+        .btn-purple {
+            background: #6b21a8;
+        }
+        .btn-orange {
+            background: #c2410c;
+        }
+        .btn-cyan {
+            background: #0e7490;
+        }
+        .btn-pink {
+            background: #9d174d;
+        }
+        .btn-indigo {
+            background: #4338ca;
+        }
+        .btn-teal {
+            background: #0d9488;
+        }
+        .btn-amber {
+            background: #b45309;
+        }
+        .btn-gray {
+            background: #4b5563;
+        }
+        .btn-auto {
+            background: #0d9488;
+        }
+        .btn-auto.active {
+            background: #047857;
+            box-shadow: 0 0 18px #0d9488aa;
+        }
+        .btn-auto:disabled {
+            background: #374151;
+        }
+        .btn-amplify {
+            background: #7c3aed;
+        }
+        .btn-amplify.active {
+            background: #6d28d9;
+            box-shadow: 0 0 22px #7c3aedaa;
+        }
+        .btn-rebirth {
+            background: #7f1d1d;
+            font-size: 20px;
+            padding: 14px 20px;
+            line-height: 1.6;
+            border: 2px solid #dc2626;
+            box-shadow: 0 0 40px #dc262680;
+        }
+        .btn-rebirth:active {
+            transform: scale(.94);
+        }
+        .btn-rebirth.hidden {
+            display: none;
+        }
+        .resource-box,
+        .setting-box,
+        .auto-box,
+        .stats-box,
+        .samsara-box,
+        .time-box,
+        .ach-box {
+            max-width: 720px;
+            margin: 0 auto;
+            margin-top: 24px;
+            background: #0f172a;
+            padding: 22px 24px;
+            border-radius: 12px;
+            border: 1px solid #273449;
+            text-align: center;
+        }
+        .divider {
+            height: 1px;
+            background: #334155;
+            margin: 14px 0;
+        }
+        .setting-row {
+            margin: 14px 0;
+            text-align: left;
+        }
+        .setting-row input,
+        .setting-row textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #e6edf7;
+            font-size: 16px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        .setting-row button {
+            margin-top: 12px;
+            padding: 12px 24px;
+            background: #991b1b;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .setting-row .save-btn {
+            background: #0d9488;
+        }
+        .tip-text {
+            margin-top: 10px;
+            font-size: 15px;
+            color: #94a3b8;
+        }
+        .error-text {
+            color: #f87171;
+        }
+        .ok-text {
+            color: #4ade80;
+        }
+        .version-text {
+            color: #94a3b8;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .auto-status {
+            font-size: 20px;
+            margin-top: 8px;
+            color: #73c2ff;
+        }
+        .auto-btn-wrap {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .auto-btn-wrap .btn {
+            font-size: 20px;
+            padding: 18px 40px;
+            border-radius: 14px;
+        }
+        .auto-check-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        .auto-check-wrap input[type=checkbox] {
+            width: 26px;
+            height: 26px;
+            accent-color: #0d9488;
+            cursor: pointer;
+        }
+        .stats-row {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 18px;
+            text-align: left;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .stats-row .stat-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #273449;
+            padding: 8px 0;
+        }
+        .stats-row .stat-label {
+            color: #94a3b8;
+        }
+        .stats-row .stat-value {
+            font-family: Consolas, monospace;
+            color: #73c2ff;
+            word-break: break-all;
+        }
+        .stats-row .stat-item.hidden {
+            display: none;
+        }
+        .rate-hint {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .resource-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #1e293b;
+            font-size: 15px;
+            flex-wrap: wrap;
+        }
+        .resource-line .res-name {
+            font-weight: 700;
+            color: #94a3b8;
+        }
+        .resource-line .res-detail {
+            color: #e6edf7;
+        }
+        .top-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .top-buttons .btn {
+            font-size: 18px;
+            padding: 10px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            transition: transform .1s;
+            line-height: 1.4;
+            text-align: center;
+            min-width: 100px;
+        }
+        .top-buttons .btn:active {
+            transform: scale(.94);
+        }
+        .top-buttons .btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .top-buttons .btn small {
+            display: block;
+            font-size: 12px;
+            opacity: .85;
+            font-weight: 400;
+        }
+        .top-buttons .btn .subinfo {
+            font-size: 13px;
+            opacity: .8;
+            font-weight: 400;
+            display: block;
+            margin-top: 2px;
+        }
+        .top-buttons .btn.hidden {
+            display: none;
+        }
+        .mid-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 8px 0;
+        }
+        .mid-buttons .btn {
+            font-size: 19px;
+            padding: 12px 28px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            transition: transform .1s;
+            line-height: 1.4;
+            text-align: center;
+            min-width: 120px;
+        }
+        .mid-buttons .btn:active {
+            transform: scale(.94);
+        }
+        .mid-buttons .btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .mid-buttons .btn small {
+            display: block;
+            font-size: 12px;
+            opacity: .85;
+            font-weight: 400;
+        }
+        .mid-buttons .btn .subinfo {
+            font-size: 13px;
+            opacity: .8;
+            font-weight: 400;
+            display: block;
+            margin-top: 2px;
+        }
+        .mid-buttons .btn.hidden {
+            display: none;
+        }
+        .sut-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+            text-align: left;
+        }
+        .sut-node {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 12px;
+            border: 2px solid transparent;
+            transition: all .2s;
+            cursor: pointer;
+            position: relative;
+        }
+        .sut-node.unlocked {
+            background: #2a3a5a;
+        }
+        .sut-node.bought {
+            background: #6b1a1a;
+            border-color: #dc2626;
+        }
+        .sut-node.bought .sut-desc,
+        .sut-node.bought .sut-effect {
+            color: #fca5a5;
+        }
+        .sut-node.can-buy {
+            border-color: #dc2626;
+            box-shadow: 0 0 12px #dc2626aa;
+        }
+        .sut-node.disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            filter: grayscale(.6);
+        }
+        .sut-node .sut-id {
+            font-weight: 700;
+            font-size: 16px;
+            color: #94a3b8;
+        }
+        .sut-node .sut-name {
+            font-weight: 600;
+            font-size: 15px;
+            margin: 4px 0;
+        }
+        .sut-node .sut-desc {
+            font-size: 13px;
+            color: #94a3b8;
+            margin: 4px 0;
+        }
+        .sut-node .sut-effect {
+            font-size: 13px;
+            color: #73c2ff;
+            margin-top: 4px;
+        }
+        .sut-node .sut-price {
+            font-size: 14px;
+            color: #fbbf24;
+            margin-top: 6px;
+        }
+        .samsara-box {
+            max-height: 70vh;
+            overflow-y: auto;
+            text-align: left;
+            padding: 16px;
+        }
+        .samsara-box .sut-grid {
+            margin-top: 8px;
+        }
+        .color-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            cursor: pointer;
+            background: #1e293b;
+            color: #e6edf7;
+            font-size: 16px;
+            transition: background .2s;
+        }
+        .color-btn:hover {
+            background: #2a3a5a;
+        }
+        .time-display {
+            font-size: 28px;
+            color: #73c2ff;
+            margin: 10px 0;
+            font-family: Consolas, monospace;
+        }
+        .time-info {
+            font-size: 16px;
+            color: #94a3b8;
+            margin: 6px 0;
+        }
+        .time-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #e6edf7;
+            font-size: 18px;
+            font-family: monospace;
+            text-align: center;
+            margin: 8px 0;
+        }
+        .time-btn {
+            padding: 10px 30px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #fff;
+            transition: background .2s;
+            margin-top: 6px;
+        }
+        .time-btn.enabled {
+            background: #0d9488;
+        }
+        .time-btn.enabled:hover {
+            background: #0f766e;
+        }
+        .time-btn.disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+            opacity: .6;
+        }
+        .time-btn.off {
+            background: #991b1b;
+        }
+        .time-btn.off:hover {
+            background: #7f1d1d;
+        }
+        .ach-grid {
+            display: grid;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .ach-item {
+            aspect-ratio: 1;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            transition: all .2s;
+            cursor: pointer;
+            background: #2a2a3a;
+            color: #6a6a7a;
+            border: 2px solid #3a3a4a;
+            position: relative;
+        }
+        .ach-item.unlocked {
+            background: #0d5a1a;
+            color: #7dff8a;
+            border-color: #2d8a3a;
+            box-shadow: 0 0 16px #2d8a3a66;
+        }
+        .ach-item .ach-id {
+            font-size: 20px;
+        }
+        .ach-item .ach-name {
+            font-size: 13px;
+            font-weight: 400;
+            opacity: .8;
+            margin-top: 4px;
+        }
+        .ach-item .ach-tip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a2e;
+            color: #e6edf7;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 400;
+            white-space: nowrap;
+            border: 1px solid #334155;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .ach-item:hover .ach-tip {
+            display: block;
+        }
+
+        /* ===== 内挂弹窗 ===== */
+        .cheat-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+            padding: 20px;
+        }
+        .cheat-overlay.open {
+            display: flex;
+        }
+        .cheat-panel {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 28px 32px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 60px rgba(37, 99, 235, 0.25);
+            position: relative;
+        }
+        .cheat-panel h2 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 6px;
+            color: #73c2ff;
+            letter-spacing: 2px;
+        }
+        .cheat-panel .cheat-sub {
+            text-align: center;
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 18px;
+        }
+        .cheat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 20px;
+        }
+        .cheat-grid .cheat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .cheat-grid .cheat-item label {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        .cheat-grid .cheat-item input {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #e6edf7;
+            font-size: 15px;
+            font-family: Consolas, monospace;
+            width: 100%;
+            transition: border .2s;
+        }
+        .cheat-grid .cheat-item input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        .cheat-grid .cheat-item input.cheat-input-sm {
+            font-size: 13px;
+            padding: 6px 10px;
+        }
+        .cheat-grid .cheat-item.cheat-full {
+            grid-column: 1 / -1;
+        }
+        .cheat-grid .cheat-item.cheat-half {
+            grid-column: span 1;
+        }
+        .cheat-panel .cheat-divider {
+            height: 1px;
+            background: #334155;
+            margin: 16px 0;
+        }
+        .cheat-panel .cheat-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 6px 0;
+        }
+        .cheat-panel .cheat-row label {
+            font-size: 16px;
+            color: #e6edf7;
+        }
+        .cheat-panel .cheat-row input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: #2563eb;
+            cursor: pointer;
+        }
+        .cheat-panel .cheat-btns {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .cheat-panel .cheat-btns button {
+            padding: 12px 40px;
+            border-radius: 8px;
+            border: none;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform .1s, opacity .2s;
+            color: #fff;
+        }
+        .cheat-panel .cheat-btns button:active {
+            transform: scale(.94);
+        }
+        .cheat-panel .cheat-btns .cheat-btn-ok {
+            background: #0d9488;
+        }
+        .cheat-panel .cheat-btns .cheat-btn-ok:hover {
+            background: #0f766e;
+        }
+        .cheat-panel .cheat-btns .cheat-btn-cancel {
+            background: #4b5563;
+        }
+        .cheat-panel .cheat-btns .cheat-btn-cancel:hover {
+            background: #6b7280;
+        }
+        .cheat-panel .cheat-close-hint {
+            text-align: center;
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 14px;
+        }
+        .cheat-panel .cheat-resource-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 8px 12px;
+        }
+        .cheat-panel .cheat-resource-row .cheat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .cheat-panel .cheat-resource-row .cheat-item label {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .cheat-panel .cheat-resource-row .cheat-item input {
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: #e6edf7;
+            font-size: 13px;
+            font-family: Consolas, monospace;
+            width: 100%;
+        }
+        .cheat-panel .cheat-resource-row .cheat-item input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        @media (max-width: 700px) {
+            .sut-grid {
+                grid-template-columns: 1fr;
+            }
+            .btn-row .btn {
+                font-size: 15px;
+                padding: 14px 12px;
+            }
+            .power-display {
+                font-size: 28px;
+            }
+            .click-btn {
+                width: 140px;
+                height: 140px;
+                font-size: 22px;
+            }
+            .center-wrap {
+                height: calc(100vh - 520px);
+                min-height: 80px;
+            }
+            .top-buttons .btn,
+            .mid-buttons .btn {
+                font-size: 16px;
+                padding: 8px 16px;
+                min-width: 80px;
+            }
+            .sub-tab {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+            .time-display {
+                font-size: 22px;
+            }
+            .ach-item {
+                font-size: 15px;
+            }
+            .ach-item .ach-id {
+                font-size: 17px;
+            }
+            .cheat-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px 12px;
+            }
+            .cheat-panel {
+                padding: 18px 14px;
+            }
+            .cheat-panel .cheat-resource-row {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+            .cheat-grid .cheat-item.cheat-half {
+                grid-column: span 1;
+            }
+        }
+        @media (max-width: 480px) {
+            .cheat-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px 10px;
+            }
+            .cheat-panel .cheat-resource-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            .cheat-panel h2 {
+                font-size: 20px;
+            }
+            .cheat-panel .cheat-btns button {
+                padding: 10px 24px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 主游戏内容 -->
+    <div id="pageBattle" class="page active">
+        <div class="tab-bar">
+            <div class="tab active" data-page="pageBattle">战斗</div>
+            <div class="tab hidden" data-page="pageAuto">自动化</div>
+            <div class="tab hidden" data-page="pageResource">资源</div>
+            <div class="tab" data-page="pageStats">统计</div>
+            <div class="tab hidden" data-page="pageAch">成就</div>
+            <div class="tab hidden" data-page="pageSamsara">重生</div>
+            <div class="tab" data-page="pageSetting">设置</div>
+        </div>
+        <div class="sub-tab-bar">
+            <div class="sub-tab active" data-sub="battleGet">获取</div>
+            <div class="sub-tab" data-sub="battleTime">时间</div>
+        </div>
+        <div class="sub-page active" id="subBattleGet">
+            <div class="top-bar">
+                <div class="label karma-label" id="karmaLabel" style="display:none;">业力</div>
+                <div class="karma-display" id="karmaDisplay" style="display:none;">0</div>
+                <div class="label power-label">战力</div>
+                <div class="power-display" id="powerText">0</div>
+            </div>
+            <div class="top-buttons" id="rebirthRow">
+                <button class="btn btn-rebirth hidden" id="rebirthBtn">触及至臻之日<br>吾将重生</button>
+            </div>
+            <div class="center-wrap">
+                <button class="click-btn" id="mainClickBtn">攻击</button>
+                <div class="mid-buttons" id="actionRow">
+                    <button class="btn btn-purple hidden" id="enhanceBtn">强化<small id="enhanceReqLabel">所需：1e5</small><span class="subinfo" id="enhanceSub"></span></button>
+                    <button class="btn btn-amplify hidden" id="amplifyBtn">增幅<small id="amplifyReqLabel">需要：1e7</small><span class="subinfo" id="amplifySub"></span></button>
+                    <button class="btn btn-red hidden" id="breakBtn">突破<small id="breakReqLabel">需要：1e9</small><span class="subinfo" id="breakSub"></span></button>
+                </div>
+            </div>
+            <div class="bottom-controls">
+                <div class="btn-row" id="rowResources"></div>
+            </div>
+        </div>
+        <div class="sub-page" id="subBattleTime">
+            <div class="time-box">
+                <h3>时间储存</h3>
+                <div class="divider"></div>
+                <div class="time-display" id="storedTimeDisplay">0秒</div>
+                <div class="time-info">你储存了 <span id="storedTimeFull">0秒</span> 的时间</div>
+                <div class="divider"></div>
+                <div class="time-info">输入数值以加速时间（≥1，支持XeY格式）</div>
+                <input class="time-input" id="timeSpeedInput" placeholder="例如 100、1e4" value="">
+                <div class="time-info" id="timeStatusInfo">你目前可以加速 (储存时间 ÷ 游戏刻) 倍</div>
+                <div style="margin-top:12px;"><button class="time-btn disabled" id="timeToggleBtn" disabled>禁用</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pageAuto" class="page">
+        <div class="tab-bar">
+            <div class="tab" data-page="pageBattle">战斗</div>
+            <div class="tab active" data-page="pageAuto">自动化</div>
+            <div class="tab hidden" data-page="pageResource">资源</div>
+            <div class="tab" data-page="pageStats">统计</div>
+            <div class="tab hidden" data-page="pageAch">成就</div>
+            <div class="tab hidden" data-page="pageSamsara">重生</div>
+            <div class="tab" data-page="pageSetting">设置</div>
+        </div>
+        <div class="sub-tab-bar">
+            <div class="sub-tab active" data-sub="autoMain">自动化</div>
+        </div>
+        <div class="sub-page active" id="subAutoMain">
+            <div class="auto-box">
+                <div id="autoPurchaseArea">
+                    <div class="auto-btn-wrap"><button id="autoBtn" class="btn btn-auto hidden">自动攻击<small id="autoReqLabel">需要：1e20</small></button></div>
+                </div>
+                <div id="autoControlArea" style="display:none;">
+                    <div class="auto-check-wrap"><label for="autoCheck">自动攻击</label><input type="checkbox" id="autoCheck"></div>
+                </div>
+                <div class="auto-status" id="autoStatus"></div>
+                <div id="autoSpeedArea" style="display:none;margin-top:16px;border-top:1px solid #334155;padding-top:12px;">
+                    <div class="auto-check-wrap"><label for="autoSpeedBtn">自动化加速 (当前: <span id="autoSpeedLevel">0</span> 次/秒)</label><button id="autoSpeedBtn" class="btn btn-auto">购买加速<small id="autoSpeedCost">需要：1业力</small></button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pageResource" class="page">
+        <div class="tab-bar">
+            <div class="tab" data-page="pageBattle">战斗</div>
+            <div class="tab" data-page="pageAuto">自动化</div>
+            <div class="tab active" data-page="pageResource">资源</div>
+            <div class="tab" data-page="pageStats">统计</div>
+            <div class="tab hidden" data-page="pageAch">成就</div>
+            <div class="tab hidden" data-page="pageSamsara">重生</div>
+            <div class="tab" data-page="pageSetting">设置</div>
+        </div>
+        <div class="sub-tab-bar">
+            <div class="sub-tab active" data-sub="resourceMult">倍率</div>
+        </div>
+        <div class="sub-page active" id="subResourceMult">
+            <div class="resource-box" id="resourceBox"></div>
+        </div>
+    </div>
+
+    <div id="pageStats" class="page">
+        <div class="tab-bar">
+            <div class="tab" data-page="pageBattle">战斗</div>
+            <div class="tab" data-page="pageAuto">自动化</div>
+            <div class="tab hidden" data-page="pageResource">资源</div>
+            <div class="tab active" data-page="pageStats">统计</div>
+            <div class="tab hidden" data-page="pageAch">成就</div>
+            <div class="tab hidden" data-page="pageSamsara">重生</div>
+            <div class="tab" data-page="pageSetting">设置</div>
+        </div>
+        <div class="sub-tab-bar">
+            <div class="sub-tab active" data-sub="statsData">数据</div>
+            <div class="sub-tab" data-sub="statsChangelog">更新日志</div>
+        </div>
+        <div class="sub-page active" id="subStatsData">
+            <div class="stats-box">
+                <h3>统计数据</h3>
+                <div class="divider"></div>
+                <div class="stats-row">
+                    <div class="stat-item"><span class="stat-label">总输出强度</span><span class="stat-value" id="totalPowerStat">0</span></div>
+                    <div class="stat-item"><span class="stat-label">历史总获得业力</span><span class="stat-value" id="totalKarmaStat">0</span></div>
+                    <div class="stat-item"><span class="stat-label">建档时间</span><span class="stat-value" id="creationTimeStat">无</span></div>
+                    <div class="stat-item"><span class="stat-label">当前时间</span><span class="stat-value" id="currentTimeStat">--</span></div>
+                    <div class="stat-item hidden" id="rebirthStatItem"><span class="stat-label">重生次数</span><span class="stat-value" id="rebirthCountStat">0</span></div>
+                    <div class="stat-item hidden" id="maxPowerStatItem"><span class="stat-label">最高重生战力</span><span class="stat-value" id="maxRebirthPowerStat">0</span></div>
+                    <div class="stat-item hidden" id="elapsedStatItem"><span class="stat-label">本次耗时</span><span class="stat-value" id="elapsedTimeStat">0s</span></div>
+                    <div class="stat-item"><span class="stat-label">帧率 (FPS)</span><span class="stat-value" id="fpsStat">0</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="sub-page" id="subStatsChangelog">
+            <div class="stats-box">
+                <h3>更新日志</h3>
+                <div class="divider"></div>
+                <div style="text-align:left;font-size:15px;color:#94a3b8;max-height:60vh;overflow-y:auto;padding:4px 0;">
+                    <div><b style="color:#e6edf7;">v0.2.3</b><br>• 涨价仅1.79e308后触发<br>• 资源涨价倍率×10^(位置+1)<br>• 强化/增幅涨价倍率×1e10<br>• 自动化加速优化<br>• 成就ACH21-25，双剑合璧奖励</div>
+                    <div style="margin-top:10px;"><b style="color:#e6edf7;">v0.2.2</b><br>• SUT公式更新<br>• 新增5个成就</div>
+                    <div style="margin-top:10px;"><b style="color:#e6edf7;">v0.2.1</b><br>• 修复SUT重生失效</div>
+                    <div style="margin-top:10px;"><b style="color:#e6edf7;">v0.2.0</b><br>• 成就系统（20个）</div>
+                    <div style="margin-top:10px;"><b style="color:#e6edf7;">v0.1.21</b><br>• 时间加速修正</div>
+                    <div style="margin-top:10px;"><b style="color:#e6edf7;">v0.1.20</b><br>• 时间储存系统</div>
+                    <div style="margin-top:10px;"><b style="color:#e6edf7;">v0.1.19</b><br>• 子页面系统</div>
+                    <div style="margin-top:10px;"><b style="color:#e6edf7;">v1.1.16</b><br>• SUT重生升级树</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pageAch" class="page">
+        <div class="tab-bar">
+            <div class="tab" data-page="pageBattle">战斗</div>
+            <div class="tab" data-page="pageAuto">自动化</div>
+            <div class="tab hidden" data-page="pageResource">资源</div>
+            <div class="tab" data-page="pageStats">统计</div>
+            <div class="tab active" data-page="pageAch">成就</div>
+            <div class="tab hidden" data-page="pageSamsara">重生</div>
+            <div class="tab" data-page="pageSetting">设置</div>
+        </div>
+        <div class="sub-tab-bar">
+            <div class="sub-tab active" data-sub="achNormal">普通</div>
+        </div>
+        <div class="sub-page active" id="subAchNormal">
+            <div class="ach-box">
+                <h3>成就</h3>
+                <div class="divider"></div>
+                <div class="ach-grid" id="achGrid" style="grid-template-columns:repeat(5,1fr);"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pageSamsara" class="page">
+        <div class="tab-bar">
+            <div class="tab" data-page="pageBattle">战斗</div>
+            <div class="tab" data-page="pageAuto">自动化</div>
+            <div class="tab hidden" data-page="pageResource">资源</div>
+            <div class="tab" data-page="pageStats">统计</div>
+            <div class="tab hidden" data-page="pageAch">成就</div>
+            <div class="tab active" data-page="pageSamsara">重生</div>
+            <div class="tab" data-page="pageSetting">设置</div>
+        </div>
+        <div class="sub-tab-bar">
+            <div class="sub-tab active" data-sub="samsaraTree">升级树</div>
+        </div>
+        <div class="sub-page active" id="subSamsaraTree">
+            <div class="samsara-box" id="sutContainer">
+                <h3>重生升级树 (SUT)</h3>
+                <div class="divider"></div>
+                <div id="sutTree" class="sut-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pageSetting" class="page">
+        <div class="tab-bar">
+            <div class="tab" data-page="pageBattle">战斗</div>
+            <div class="tab" data-page="pageAuto">自动化</div>
+            <div class="tab hidden" data-page="pageResource">资源</div>
+            <div class="tab" data-page="pageStats">统计</div>
+            <div class="tab hidden" data-page="pageAch">成就</div>
+            <div class="tab hidden" data-page="pageSamsara">重生</div>
+            <div class="tab active" data-page="pageSetting">设置</div>
+        </div>
+        <div class="sub-tab-bar">
+            <div class="sub-tab active" data-sub="settingDisplay">显示</div>
+            <div class="sub-tab" data-sub="settingSave">存档</div>
+        </div>
+        <div class="sub-page active" id="subSettingDisplay">
+            <div class="setting-box">
+                <div class="version-text">版本：v0.2.3</div>
+                <div class="setting-row"><label>游戏循环刷新速率 (30-200ms)</label><input id="rateInput" type="number" min="30" max="200" value="50"><div class="rate-hint" id="rateDisplayHint">当前速率：50 ms</div><button id="applyRateBtn">应用速率</button><div id="rateTip" class="tip-text"></div></div>
+                <div class="setting-row"><label>资源按钮列数 (2-5)</label><input id="columnInput" type="number" min="2" max="5" value="4"><button id="applyColumnBtn">应用列数</button><div id="columnTip" class="tip-text"></div></div>
+                <div class="setting-row"><label>成就列数 (4-6)</label><input id="achColumnInput" type="number" min="4" max="6" value="5"><button id="applyAchColumnBtn">应用</button><div id="achColumnTip" class="tip-text"></div></div>
+                <div class="divider"></div>
+                <div class="setting-row"><label>背景颜色</label><button id="colorCycleBtn" class="color-btn">当前: 黑色</button><div class="tip-text">点击循环切换 黑→白→红→蓝</div></div>
+            </div>
+        </div>
+        <div class="sub-page" id="subSettingSave">
+            <div class="setting-box">
+                <h3>存档管理</h3>
+                <div class="divider"></div>
+                <div class="setting-row"><label>自动存档间隔 (10-60秒)</label><input id="saveIntervalInput" type="number" min="10" max="60" value="30"><button id="applySaveIntervalBtn">应用间隔</button><div id="saveIntervalTip" class="tip-text"></div></div>
+                <div class="divider"></div>
+                <div class="setting-row"><div>导出存档</div><button id="exportBtn" class="save-btn">导出存档数据（编码已填入下方）</button><div id="exportTip" class="tip-text"></div></div>
+                <div class="setting-row"><div>导入存档（粘贴编码）</div><textarea id="importInput" rows="3" placeholder="粘贴存档编码..."></textarea><button id="importBtn">导入存档</button><div id="importTip" class="tip-text"></div></div>
+                <div class="divider"></div>
+                <div class="setting-row"><div>重置全部存档（不可逆！）</div><input id="resetInput" placeholder="请输入：花开花落，曲终人散"><button id="resetBtn">确认重置存档</button><div class="tip-text" id="resetTip"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 内挂弹窗 (按Y键打开) ===== -->
+    <div class="cheat-overlay" id="cheatOverlay">
+        <div class="cheat-panel">
+            <h2>⚙ 内挂设置</h2>
+            <div class="cheat-sub">按 <kbd>Y</kbd> 键关闭 · 修改后点击「确定」生效</div>
+
+            <div class="cheat-grid">
+                <div class="cheat-item"><label>战力 (power)</label><input id="chPower" type="text" class="cheat-input-sm"></div>
+                <div class="cheat-item"><label>业力 (karma)</label><input id="chKarma" type="text" class="cheat-input-sm"></div>
+                <div class="cheat-item"><label>历史总业力</label><input id="chTotalKarma" type="text" class="cheat-input-sm"></div>
+                <div class="cheat-item"><label>强化次数</label><input id="chEnhanceCount" type="text" class="cheat-input-sm"></div>
+                <div class="cheat-item"><label>增幅次数</label><input id="chAmplifyCount" type="text" class="cheat-input-sm"></div>
+                <div class="cheat-item"><label>突破次数</label><input id="chBreakCount" type="text" class="cheat-input-sm"></div>
+                <div class="cheat-item"><label>基础攻击 (mBase)</label><input id="chMBase" type="text" class="cheat-input-sm"></div>
+                <div class="cheat-item"><label>储存时间 (秒)</label><input id="chStoredTime" type="text" class="cheat-input-sm"></div>
+                <div class="cheat-item"><label>强化倍率</label><input id="chEnhanceMult" type="text" class="cheat-input-sm"></div>
+                <div class="cheat-item"><label>突破指数</label><input id="chBreakIndex" type="text" class="cheat-input-sm"></div>
+                <div class="cheat-item"><label>重生次数</label><input id="chRebirthCount" type="text" class="cheat-input-sm"></div>
+                <div class="cheat-item"><label>最高重生战力</label><input id="chMaxRebirthPower" type="text" class="cheat-input-sm"></div>
+            </div>
+
+            <div class="cheat-divider"></div>
+
+            <div style="font-size:14px;color:#94a3b8;margin-bottom:8px;font-weight:500;">资源数量</div>
+            <div class="cheat-resource-row" id="cheatResourceRow">
+                <!-- 由JS动态生成 -->
+            </div>
+
+            <div class="cheat-divider"></div>
+
+            <div class="cheat-row">
+                <label for="chKeepOnRebirth">☑ 重生保留数值 (开启后重生不重置任何进度，只增加业力)</label>
+                <input type="checkbox" id="chKeepOnRebirth">
+            </div>
+
+            <div class="cheat-divider"></div>
+
+            <div class="cheat-btns">
+                <button class="cheat-btn-ok" id="cheatOkBtn">确 定</button>
+                <button class="cheat-btn-cancel" id="cheatCancelBtn">取 消</button>
+            </div>
+            <div class="cheat-close-hint">按 <kbd>Y</kbd> 关闭 · 修改即时生效需点击「确定」</div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 工具函数 =====
+        function D(v) { return (v instanceof Decimal) ? v : new Decimal(v) }
+
+        function fmt(v) {
+            if (!(v instanceof Decimal)) v = D(v);
+            if (v.eq(0)) return '0';
+            let a = v.abs();
+            if (a.lt(1e5)) {
+                let s = v.toString(),
+                    n = parseFloat(s);
+                if (!isNaN(n)) {
+                    let p = n.toPrecision(6);
+                    return parseFloat(p).toString()
+                }
+                return s
+            }
+            let s = v.toExponential(4);
+            s = s.replace(/(\.\d*?)0+(?=e)/, '$1');
+            s = s.replace(/\.e/, 'e');
+            s = s.replace(/e\+/, 'e');
+            return s
+        }
+
+        function gte(a, b) { return D(a).gte(D(b)) }
+
+        function gt(a, b) { return D(a).gt(D(b)) }
+
+        function lt(a, b) { return D(a).lt(D(b)) }
+
+        function log10(v) { return D(v).log10() }
+
+        function pow(a, b) { return D(a).pow(b) }
+
+        function ln(v) { return D(v).ln() }
+
+        // ===== 常量 =====
+        const SAVE_KEY = 'combat_power_increment';
+        const RESET_PASSWORD = '花开花落，曲终人散';
+        const REBIRTH_THRESHOLD = D('1.7976e308');
+        const AUTO_UNLOCK_POWER = D(1e19);
+        const AUTO_PRICE = D(1e20);
+        const ENHANCE_INIT_PRICE = D(1e6);
+        const BREAK_INIT_THRESHOLD = D(1e10);
+        const PRICE_INFLATION_LIMIT = D('1e309');
+        const AMPLIFY_BASE_COST = D(1e8);
+        const AMPLIFY_BASE_MULT = D(1e10);
+
+        const RES_DEFS_RAW = [
+            { id: 'brick', label: '砖', color: 'btn-green', initPrice: 10, priceMult: 100, unlockPower: 10, lowerKey: 'mBase' },
+            { id: 'wall', label: '墙', color: 'btn-blue', initPrice: 10000, priceMult: 1000, unlockPower: 10000, lowerKey: 'brickMult' },
+            { id: 'house', label: '屋', color: 'btn-orange', initPrice: 1e9, priceMult: 1e10, unlockPower: 1e8, lowerKey: 'wallMult' },
+            { id: 'building', label: '楼', color: 'btn-cyan', initPrice: 1e22, priceMult: 1e12, unlockPower: 1e12, lowerKey: 'houseMult' },
+            { id: 'street', label: '街', color: 'btn-pink', initPrice: 1e32, priceMult: 1e15, unlockPower: 1e18, lowerKey: 'buildingMult' },
+            { id: 'city', label: '城', color: 'btn-indigo', initPrice: 1e43, priceMult: 1e22, unlockPower: 1e25, lowerKey: 'streetMult' },
+            { id: 'country', label: '国', color: 'btn-amber', initPrice: 1e61, priceMult: 1e28, unlockPower: 1e33, lowerKey: 'cityMult' },
+            { id: 'continent', label: '陆', color: 'btn-teal', initPrice: 1e95, priceMult: 1e37, unlockPower: 1e42, lowerKey: 'countryMult' }
+        ];
+        const RES_DEFS = RES_DEFS_RAW.map((d, i) => ({ ...d, priceMultVar: D(d.priceMult), index: i }));
+
+        const SUT_NODES = {
+            '1': { name: '攻击加成', desc: '攻击获得根据历史总获得业力提供的加成', price: 1, effect: g => { let x = totalKarma(g).toNumber(); return D(computeSUTMult(x)) } },
+            '10': { name: '强化加成', desc: '强化倍率获得根据历史总获得业力提供的加成', price: 2, effect: g => { let x = totalKarma(g).toNumber(); return D(computeSUTMult(x)) } },
+            '11': { name: '增幅底数优化', desc: '增幅底数获得根据历史总获得业力提供的加成', price: 2, effect: g => { let t = totalKarma(g); return t.gt(1) ? D(0.9).div(pow(log10(t), 0.5)) : D(0.9) } },
+            '100': { name: '突破公式优化', desc: '突破指数计算改为 1+ln(1+log10(战力)/40)/2.5', price: 3, effect: g => {} },
+            '101': { name: '资源不重置倍率', desc: '获得资源不再重置低层次倍率', price: 4, effect: g => {} },
+            '110': { name: '资源只扣需求', desc: '获得资源只在当前战力上减去需求值', price: 4, effect: g => {} },
+            '111': { name: '自动化加速', desc: '解锁自动化速度优化升级', price: 3, effect: g => {} },
+            '1000': { name: '陆加成', desc: '根据历史总获得业力为陆提供加成', price: 10, effect: g => { let x = totalKarma(g).toNumber(); return D(computeSUTMult(x)) } },
+            '1001': { name: '砖加成', desc: '根据历史总获得业力为砖提供加成', price: 10, effect: g => { let x = totalKarma(g).toNumber(); return D(computeSUTMult(x)) } },
+            '1010': { name: '墙加成', desc: '根据历史总获得业力为墙提供加成', price: 10, effect: g => { let x = totalKarma(g).toNumber(); return D(computeSUTMult(x)) } },
+            '1011': { name: '屋加成', desc: '根据历史总获得业力为屋提供加成', price: 10, effect: g => { let x = totalKarma(g).toNumber(); return D(computeSUTMult(x)) } },
+            '1100': { name: '楼加成', desc: '根据历史总获得业力为楼提供加成', price: 10, effect: g => { let x = totalKarma(g).toNumber(); return D(computeSUTMult(x)) } },
+            '1101': { name: '街加成', desc: '根据历史总获得业力为街提供加成', price: 10, effect: g => { let x = totalKarma(g).toNumber(); return D(computeSUTMult(x)) } },
+            '1110': { name: '城加成', desc: '根据历史总获得业力为城提供加成', price: 10, effect: g => { let x = totalKarma(g).toNumber(); return D(computeSUTMult(x)) } },
+            '1111': { name: '国加成', desc: '根据历史总获得业力为国提供加成', price: 10, effect: g => { let x = totalKarma(g).toNumber(); return D(computeSUTMult(x)) } }
+        };
+
+        function computeSUTMult(x) { if (x <= 1) return 1; let t = 7.5 * x / (x + 7); return Math.pow(x, t); }
+
+        function childrenOf(c) { return [c + '0', c + '1'] }
+
+        const ACH_DEFS = [
+            { id: 1, name: '战斗砖精', desc: '首次获得砖', resId: 'brick' },
+            { id: 2, name: '强上加墙', desc: '首次获得墙', resId: 'wall' },
+            { id: 3, name: '突飞猛进', desc: '首次强化', type: 'enhance' },
+            { id: 4, name: '降价促销', desc: '首次增幅', type: 'amplify' },
+            { id: 5, name: '屋与伦比', desc: '首次获得屋', resId: 'house' },
+            { id: 6, name: '独揽层楼', desc: '首次获得楼', resId: 'building' },
+            { id: 7, name: '踏上街梯', desc: '首次获得街', resId: 'street' },
+            { id: 8, name: '众志成城', desc: '首次获得城', resId: 'city' },
+            { id: 9, name: '国关斩将', desc: '首次获得国', resId: 'country' },
+            { id: 10, name: '崭陆头角', desc: '首次获得陆', resId: 'continent' },
+            { id: 11, name: '突破极限', desc: '首次突破', type: 'break' },
+            { id: 12, name: '六六大顺', desc: '达到 1e36 战力', type: 'power', target: 1e36 },
+            { id: 13, name: '时光飞逝', desc: '储存时间超过1小时', type: 'storedTime', target: 3600 },
+            { id: 14, name: '势如破竹', desc: '突破指数超过1.2', type: 'breakIndex', target: 1.2 },
+            { id: 15, name: '九五至尊', desc: '达到 1e95 战力', type: 'power', target: 1e95 },
+            { id: 16, name: '屋懈可击', desc: '屋数目达到 21.47亿', type: 'resourceCount', resId: 'house', target: 2.147e9 },
+            { id: 17, name: '百无聊赖', desc: '达到 1e100 战力', type: 'power', target: 1e100 },
+            { id: 18, name: '五菱宏光', desc: '进行五次突破', type: 'breakCount', target: 5 },
+            { id: 19, name: '三生万物', desc: '达到 1e300 战力', type: 'power', target: 1e300 },
+            { id: 20, name: '涅槃重生', desc: '进行一次重生', type: 'rebirth', target: 1 },
+            { id: 21, name: '首当其冲', desc: '购买SUT1', type: 'sut1' },
+            { id: 22, name: '十世轮回', desc: '完成十次重生', type: 'rebirthCount', target: 10 },
+            { id: 23, name: '双剑合璧', desc: '同时拥有SUT101与SUT110', type: 'sut101and110' },
+            { id: 24, name: '再创辉煌', desc: '一次重生获得2业力', type: 'karma2' },
+            { id: 25, name: '重获新生', desc: '点亮SUT前四行（所有节点）', type: 'sutAll' }
+        ];
+
+        // ===== 游戏对象 =====
+        function makeDefaultGame() {
+            let g = {
+                power: D(0),
+                mBase: D(1),
+                enhanceCount: 0,
+                enhancePrice: D(ENHANCE_INIT_PRICE),
+                enhancePriceMult: D(10),
+                enhanceMult: D(1),
+                amplifyCount: 0,
+                amplifyPriceMult: D(AMPLIFY_BASE_MULT),
+                amplifyNextCost: D(AMPLIFY_BASE_COST),
+                breakCount: 0,
+                breakIndex: D(1),
+                breakThreshold: D(BREAK_INIT_THRESHOLD),
+                breakUnlocked: false,
+                autoUnlocked: false,
+                autoEnabled: false,
+                totalPowerProduced: D(0),
+                creationTime: Date.now(),
+                rebirthCount: 0,
+                maxRebirthPower: D(0),
+                rebirthStartTime: Date.now(),
+                karma: D(0),
+                totalKarma: D(0),
+                samsaraUnlocked: false,
+                resourceTabUnlocked: false,
+                autoTabUnlocked: false,
+                loopRateMs: 50,
+                columnCount: 4,
+                achColumnCount: 5,
+                enhanceUsed: false,
+                breakUsed: false,
+                amplifyUsed: false,
+                autoAccumulator: 0,
+                autoSpeedLevel: 0,
+                sutBought: {},
+                sutRevealed: { '1': true },
+                dynamicPriceGroup: 10,
+                resources: {},
+                resourcePriceMultVars: {},
+                revealed: { enhance: false, amplify: false, break: false, auto: false, resources: {} },
+                bgColor: 0,
+                storedTime: 0,
+                timeSpeed: 1,
+                timeEnabled: false,
+                achBits: [],
+                karma2Unlocked: false,
+                autoSpeedMult: 2,
+                // 内挂：重生保留数值（默认 false，即正常重置）
+                keepOnRebirth: false
+            };
+            RES_DEFS.forEach(d => {
+                g.resources[d.id] = { count: D(0), mult: D(1), price: D(d.initPrice), unlocked: false };
+                g.revealed.resources[d.id] = false;
+                g.resourcePriceMultVars[d.id] = D(d.priceMult);
+            });
+            return g;
+        }
+
+        function totalKarma(g) { return g.totalKarma }
+
+        function getAchCount(g) { let c = 0; ACH_DEFS.forEach(a => { if (isAchUnlocked(g, a.id)) c++ }); return c }
+
+        function getAchMult(g) { let n = getAchCount(g); return D(1.09).pow(n) }
+
+        function isAchUnlocked(g, id) {
+            let idx = Math.floor((id - 1) / 10);
+            let bit = (id - 1) % 10;
+            if (!g.achBits[idx]) return false;
+            return !!(g.achBits[idx] & (1 << bit));
+        }
+
+        function setAchUnlocked(g, id) {
+            let idx = Math.floor((id - 1) / 10);
+            let bit = (id - 1) % 10;
+            if (!g.achBits[idx]) g.achBits[idx] = 0;
+            g.achBits[idx] |= (1 << bit);
+        }
+
+        function checkAchievements(g) {
+            ACH_DEFS.forEach(a => {
+                if (isAchUnlocked(g, a.id)) return;
+                let unlock = false;
+                if (a.resId) { let r = g.resources[a.resId]; if (r && r.count.gt(0)) unlock = true; } else if (a.type ===
+                    'enhance') { if (g.enhanceUsed) unlock = true; } else if (a.type === 'amplify') { if (g
+                        .amplifyUsed) unlock = true; } else if (a.type === 'sut1') { if (g.sutBought['1']) unlock =
+                        true; } else if (a.type === 'rebirthCount') { if (g.rebirthCount >= a.target) unlock = true; } else if (
+                    a.type === 'sut101and110') { if (g.sutBought['101'] && g.sutBought['110']) unlock = true; } else if (a
+                    .type === 'karma2') { if (g.karma2Unlocked) unlock = true; } else if (a.type === 'sutAll') { let all =
+                        true;
+                    Object.keys(SUT_NODES).forEach(k => { if (!g.sutBought[k]) all = false; }); if (all) unlock = true; } else
+                    if (a.type === 'break') { if (g.breakUsed) unlock = true; } else if (a.type === 'power') { if (gte(g
+                        .power, a.target)) unlock = true; } else if (a.type === 'storedTime') { if (g.storedTime >= a
+                        .target) unlock = true; } else if (a.type === 'breakIndex') { if (gt(g.breakIndex, a.target))
+                        unlock = true; } else if (a.type === 'resourceCount') { let r = g.resources[a.resId]; if (r &&
+                        gte(r.count, a.target)) unlock = true; } else if (a.type === 'breakCount') { if (g.breakCount >=
+                        a.target) unlock = true; }
+                if (unlock) setAchUnlocked(g, a.id);
+            });
+        }
+
+        // ===== 序列化 / 反序列化 =====
+        function serializeGame(g) {
+            let resCounts = [],
+                resMults = [],
+                resPrices = [],
+                resUnlocked = [],
+                resRevealed = [],
+                resPriceMultVars = [];
+            RES_DEFS.forEach(d => {
+                let r = g.resources[d.id];
+                resCounts.push(r.count.toString());
+                resMults.push(r.mult.toString());
+                resPrices.push(r.price.toString());
+                resUnlocked.push(r.unlocked ? 1 : 0);
+                resRevealed.push(g.revealed.resources[d.id] ? 1 : 0);
+                resPriceMultVars.push(g.resourcePriceMultVars[d.id].toString());
+            });
+            let obj = {
+                p: g.power.toString(),
+                m: g.mBase.toString(),
+                ec: g.enhanceCount,
+                ep: g.enhancePrice.toString(),
+                epm: g.enhancePriceMult.toString(),
+                em: g.enhanceMult.toString(),
+                ac: g.amplifyCount,
+                apm: g.amplifyPriceMult.toString(),
+                anc: g.amplifyNextCost.toString(),
+                bc: g.breakCount,
+                bi: g.breakIndex.toString(),
+                bt: g.breakThreshold.toString(),
+                bu: g.breakUnlocked ? 1 : 0,
+                au: g.autoUnlocked ? 1 : 0,
+                ae: g.autoEnabled ? 1 : 0,
+                tp: g.totalPowerProduced.toString(),
+                ct: g.creationTime,
+                rc: g.rebirthCount,
+                mrp: g.maxRebirthPower.toString(),
+                rst: g.rebirthStartTime,
+                ka: g.karma.toString(),
+                tk: g.totalKarma.toString(),
+                su: g.samsaraUnlocked ? 1 : 0,
+                rtu: g.resourceTabUnlocked ? 1 : 0,
+                atu: g.autoTabUnlocked ? 1 : 0,
+                lr: g.loopRateMs,
+                cc: g.columnCount,
+                acc: g.achColumnCount,
+                eu: g.enhanceUsed ? 1 : 0,
+                bu2: g.breakUsed ? 1 : 0,
+                au2: g.amplifyUsed ? 1 : 0,
+                aa: g.autoAccumulator,
+                asl: g.autoSpeedLevel,
+                sb: Object.keys(g.sutBought).join(','),
+                sr: Object.keys(g.sutRevealed).join(','),
+                dpg: g.dynamicPriceGroup,
+                bg: g.bgColor,
+                st: g.storedTime,
+                ts: g.timeSpeed,
+                te: g.timeEnabled ? 1 : 0,
+                ab: g.achBits.join(','),
+                k2: g.karma2Unlocked ? 1 : 0,
+                asm: g.autoSpeedMult,
+                rcnt: resCounts.join(','),
+                rmu: resMults.join(','),
+                rpr: resPrices.join(','),
+                run: resUnlocked.join(','),
+                rrv: resRevealed.join(','),
+                rpm: resPriceMultVars.join(','),
+                rev: { enh: g.revealed.enhance ? 1 : 0, amp: g.revealed.amplify ? 1 : 0, brk: g.revealed.break ? 1 : 0,
+                    aut: g.revealed.auto ? 1 : 0 },
+                kor: g.keepOnRebirth ? 1 : 0 // 内挂：重生保留数值
+            };
+            return obj;
+        }
+
+        function deserializeGame(obj) {
+            let g = makeDefaultGame();
+            g.power = D(obj.p);
+            g.mBase = D(obj.m);
+            g.enhanceCount = obj.ec || 0;
+            g.enhancePrice = D(obj.ep);
+            g.enhancePriceMult = D(obj.epm || 10);
+            g.enhanceMult = D(obj.em || 1);
+            g.amplifyCount = obj.ac || 0;
+            g.amplifyPriceMult = D(obj.apm || AMPLIFY_BASE_MULT);
+            g.amplifyNextCost = D(obj.anc || AMPLIFY_BASE_COST);
+            g.breakCount = obj.bc || 0;
+            g.breakIndex = D(obj.bi || 1);
+            g.breakThreshold = D(obj.bt || BREAK_INIT_THRESHOLD);
+            g.breakUnlocked = !!obj.bu;
+            g.autoUnlocked = !!obj.au;
+            g.autoEnabled = !!obj.ae;
+            g.totalPowerProduced = D(obj.tp || '0');
+            g.creationTime = obj.ct || Date.now();
+            g.rebirthCount = obj.rc || 0;
+            g.maxRebirthPower = D(obj.mrp || '0');
+            g.rebirthStartTime = obj.rst || Date.now();
+            g.karma = D(obj.ka || '0');
+            g.totalKarma = D(obj.tk || '0');
+            g.samsaraUnlocked = !!obj.su;
+            g.resourceTabUnlocked = !!obj.rtu;
+            g.autoTabUnlocked = !!obj.atu;
+            g.loopRateMs = obj.lr || 50;
+            g.columnCount = obj.cc || 4;
+            g.achColumnCount = obj.acc || 5;
+            g.enhanceUsed = !!obj.eu;
+            g.breakUsed = !!obj.bu2;
+            g.amplifyUsed = !!obj.au2;
+            g.autoAccumulator = obj.aa || 0;
+            g.autoSpeedLevel = obj.asl || 0;
+            if (obj.sb) { let arr = obj.sb.split(','); arr.forEach(k => { if (k) g.sutBought[k] = true }) }
+            if (obj.sr) { let arr = obj.sr.split(','); arr.forEach(k => { if (k) g.sutRevealed[k] = true }) }
+            g.dynamicPriceGroup = obj.dpg || 10;
+            g.bgColor = obj.bg || 0;
+            g.storedTime = obj.st || 0;
+            g.timeSpeed = obj.ts || 1;
+            g.timeEnabled = !!obj.te;
+            if (obj.ab) { let arr = obj.ab.split(','); g.achBits = arr.map(v => parseInt(v) || 0) }
+            g.karma2Unlocked = !!obj.k2;
+            g.autoSpeedMult = obj.asm || 2;
+            // 内挂：重生保留数值
+            g.keepOnRebirth = !!obj.kor;
+
+            if (obj.rcnt) {
+                let cnt = obj.rcnt.split(','),
+                    mu = obj.rmu.split(','),
+                    pr = obj.rpr.split(','),
+                    un = obj.run.split(','),
+                    rv = obj.rrv.split(','),
+                    rpm = obj.rpm.split(',');
+                RES_DEFS.forEach((d, i) => {
+                    let r = g.resources[d.id];
+                    r.count = D(cnt[i] || '0');
+                    r.mult = D(mu[i] || '1');
+                    r.price = D(pr[i] || d.initPrice);
+                    r.unlocked = !!(parseInt(un[i]) || 0);
+                    g.revealed.resources[d.id] = !!(parseInt(rv[i]) || 0);
+                    g.resourcePriceMultVars[d.id] = D(rpm[i] || d.priceMult);
+                });
+            }
+            if (obj.rev) {
+                g.revealed.enhance = !!obj.rev.enh;
+                g.revealed.amplify = !!obj.rev.amp;
+                g.revealed.break = !!obj.rev.brk;
+                g.revealed.auto = !!obj.rev.aut;
+            }
+            return g;
+        }
+
+        function saveGame(g) { localStorage.setItem(SAVE_KEY, JSON.stringify(serializeGame(g))) }
+
+        function loadGame() { let r = localStorage.getItem(SAVE_KEY); if (!r) return null; try { return deserializeGame(JSON
+                    .parse(r)) } catch (e) { return null } }
+
+        // ===== SUT 相关 =====
+        function canBuySUT(g, c) {
+            let n = SUT_NODES[c];
+            if (!n) return false;
+            if (g.sutBought[c]) return false;
+            let p = c.slice(0, -1);
+            if (p && !g.sutBought[p]) return false;
+            let price = n.price;
+            if (c.startsWith('10') && c.length >= 4) price = g.dynamicPriceGroup;
+            return gte(g.karma, price);
+        }
+
+        function buySUT(g, c) {
+            if (!canBuySUT(g, c)) return;
+            let n = SUT_NODES[c];
+            if (!n) return;
+            let price = n.price;
+            if (c.startsWith('10') && c.length >= 4) price = g.dynamicPriceGroup;
+            g.karma = g.karma.minus(price);
+            g.sutBought[c] = true;
+            let kids = childrenOf(c);
+            kids.forEach(k => { if (SUT_NODES[k]) g.sutRevealed[k] = true });
+            if (c.startsWith('10') && c.length >= 4) { g.dynamicPriceGroup += 10 };
+            checkAchievements(g);
+        }
+
+        // ===== 游戏逻辑 =====
+        function computeEnhancedMult(g) {
+            let n = g.enhanceCount;
+            if (n === 0) { g.enhanceMult = D(1) } else {
+                let t = D(0);
+                for (let i = 1; i <= n; i++) {
+                    let a = D(i).pow(0.55).minus(0.5);
+                    if (a.lt(0)) a = D(0);
+                    t = t.plus(a);
+                }
+                g.enhanceMult = D(1).plus(t);
+            }
+            if (g.sutBought['10']) {
+                let mult = SUT_NODES['10'].effect(g);
+                g.enhanceMult = g.enhanceMult.times(mult);
+            }
+            let idx = g.breakIndex;
+            g.enhanceMult = g.enhanceMult.pow(idx);
+        }
+
+        function getAmplifyDiscount(g) {
+            let base = D(0.9);
+            if (g.sutBought['11']) {
+                let tk = totalKarma(g);
+                if (tk.gt(1)) base = D(0.9).div(pow(log10(tk), 0.5));
+            }
+            let idx = g.breakIndex;
+            return base.pow(g.amplifyCount).pow(idx);
+        }
+
+        function updateBreakIndex(g, p) {
+            if (p.lte(1)) { g.breakIndex = D(1); return }
+            let logp = log10(p);
+            if (logp.lt(0)) { g.breakIndex = D(1); return }
+            let inside = D(1).plus(logp.div(40));
+            if (g.sutBought['100']) {
+                g.breakIndex = D(1).plus(ln(inside).div(2.5));
+            } else {
+                g.breakIndex = D(1).plus(ln(inside).div(3.25));
+            }
+            if (g.breakIndex.lt(1)) g.breakIndex = D(1);
+        }
+
+        function getDiscountedPrice(b, g) { return b.times(getAmplifyDiscount(g)) }
+
+        function getResourceExtraMult(g, id) {
+            let map = { 'continent': '1000', 'brick': '1001', 'wall': '1010', 'house': '1011', 'building': '1100',
+                'street': '1101', 'city': '1110', 'country': '1111' };
+            let c = map[id];
+            if (!c || !g.sutBought[c]) return D(1);
+            return SUT_NODES[c].effect(g);
+        }
+
+        function getAttackExtraMult(g) {
+            if (!g.sutBought['1']) return D(1);
+            return SUT_NODES['1'].effect(g);
+        }
+
+        function updateProduction(g, dt) {
+            let e = g.enhanceMult;
+            let tm = g.timeEnabled ? g.timeSpeed : 1;
+            for (let i = RES_DEFS.length - 1; i >= 0; i--) {
+                let d = RES_DEFS[i],
+                    r = g.resources[d.id];
+                if (!r.unlocked || r.count.eq(0)) continue;
+                let ex = getResourceExtraMult(g, d.id);
+                let c = r.count.times(r.mult).times(e).times(ex).times(dt).times(tm);
+                let lk = d.lowerKey;
+                if (lk === 'mBase') {
+                    g.mBase = g.mBase.plus(c);
+                } else {
+                    let ld = RES_DEFS.find(dd => dd.id + 'Mult' === lk || dd.id === lk);
+                    if (ld) {
+                        let lr = g.resources[ld.id];
+                        if (lr) lr.mult = lr.mult.plus(c);
+                    }
+                }
+            }
+        }
+
+        function buyResource(g, id) {
+            let d = RES_DEFS.find(dd => dd.id === id);
+            if (!d) return;
+            let r = g.resources[id];
+            if (!r.unlocked) return;
+            let price = getDiscountedPrice(r.price, g);
+            if (!gte(g.power, price)) return;
+            g.power = g.power.minus(price);
+            let idx = RES_DEFS.indexOf(d);
+            let ach23 = isAchUnlocked(g, 23);
+            if (!ach23) {
+                for (let i = 0; i < idx; i++) {
+                    let low = RES_DEFS[i],
+                        lr = g.resources[low.id];
+                    lr.count = D(0);
+                    if (!g.sutBought['101']) lr.mult = D(1);
+                    lr.price = D(low.initPrice);
+                }
+            }
+            if (!g.sutBought['101']) g.mBase = D(1);
+            if (!g.sutBought['110']) g.power = D(0);
+            let mult = gte(r.price, PRICE_INFLATION_LIMIT) ? 1.1 : 2;
+            let oldCount = r.count;
+            r.count = r.count.eq(0) ? D(1) : r.count.times(mult);
+            let priceMultVar = g.resourcePriceMultVars[id];
+            if (gte(g.power, REBIRTH_THRESHOLD)) {
+                let pos = d.index + 1;
+                let multiplier = D(10).pow(pos);
+                priceMultVar = priceMultVar.times(multiplier);
+                g.resourcePriceMultVars[id] = priceMultVar;
+            }
+            r.price = r.price.times(priceMultVar);
+            if (!g.resourceTabUnlocked) g.resourceTabUnlocked = true;
+            g.revealed.resources[id] = true;
+            if (oldCount.eq(0) && r.count.gt(0)) { checkAchievements(g); }
+        }
+
+        function doEnhance(g) {
+            let price = getDiscountedPrice(g.enhancePrice, g);
+            if (!gte(g.power, price)) return;
+            g.power = g.power.minus(price);
+            g.enhanceCount += 1;
+            g.enhanceUsed = true;
+            computeEnhancedMult(g);
+            if (gte(g.power, REBIRTH_THRESHOLD)) {
+                let mult = D(1e10);
+                g.enhancePriceMult = g.enhancePriceMult.times(mult);
+                g.enhancePrice = g.enhancePrice.times(g.enhancePriceMult);
+            } else {
+                g.enhancePrice = g.enhancePrice.times(g.enhancePriceMult);
+            }
+            g.revealed.enhance = true;
+            checkAchievements(g);
+        }
+
+        function doAmplify(g) {
+            let cost = g.amplifyNextCost;
+            if (!gte(g.power, cost)) return;
+            g.power = g.power.minus(cost);
+            g.amplifyCount += 1;
+            g.amplifyUsed = true;
+            if (gte(g.power, REBIRTH_THRESHOLD)) {
+                let mult = D(1e10);
+                g.amplifyPriceMult = g.amplifyPriceMult.times(mult);
+                g.amplifyNextCost = cost.times(g.amplifyPriceMult);
+            } else {
+                g.amplifyNextCost = cost.times(g.amplifyPriceMult);
+            }
+            g.revealed.amplify = true;
+            checkAchievements(g);
+        }
+
+        function doBreak(g) {
+            if (!gte(g.power, g.breakThreshold)) return;
+            let pAt = g.power;
+            let keep = ['breakCount', 'breakUnlocked', 'autoUnlocked', 'autoEnabled', 'samsaraUnlocked', 'rebirthCount',
+                'maxRebirthPower', 'karma', 'totalKarma', 'creationTime', 'totalPowerProduced', 'rebirthStartTime',
+                'enhanceUsed', 'breakUsed', 'amplifyUsed', 'resourceTabUnlocked', 'autoTabUnlocked', 'revealed',
+                'sutBought', 'sutRevealed', 'dynamicPriceGroup', 'autoSpeedLevel', 'bgColor', 'storedTime', 'timeSpeed',
+                'timeEnabled', 'achBits', 'karma2Unlocked', 'autoSpeedMult', 'keepOnRebirth'
+            ];
+            let saved = {};
+            keep.forEach(k => saved[k] = g[k]);
+            RES_DEFS.forEach(d => {
+                let r = g.resources[d.id];
+                r.count = D(0);
+                r.mult = D(1);
+                r.price = D(d.initPrice);
+                r.unlocked = false;
+                g.resourcePriceMultVars[d.id] = D(d.priceMult);
+            });
+            g.mBase = D(1);
+            g.power = D(0);
+            g.enhanceCount = 0;
+            g.enhancePrice = D(ENHANCE_INIT_PRICE);
+            g.enhancePriceMult = D(10);
+            g.enhanceMult = D(1);
+            g.amplifyCount = 0;
+            g.amplifyPriceMult = D(AMPLIFY_BASE_MULT);
+            g.amplifyNextCost = D(AMPLIFY_BASE_COST);
+            g.breakCount = saved.breakCount + 1;
+            updateBreakIndex(g, pAt);
+            g.breakThreshold = pAt.plus(1);
+            delete saved.breakCount;
+            Object.assign(g, saved);
+            g.breakUnlocked = false;
+            g.breakUsed = true;
+            computeEnhancedMult(g);
+            checkAchievements(g);
+        }
+
+        function doRebirth(g) {
+            if (!gte(g.power, REBIRTH_THRESHOLD)) return;
+            let l = g.power.log10();
+            let kg = D(2).pow(l.div(308.24)).floor().minus(1);
+            if (kg.lt(0)) kg = D(0);
+            g.karma = g.karma.plus(kg);
+            g.totalKarma = g.totalKarma.plus(kg);
+            if (kg.gte(2) && !g.karma2Unlocked) { g.karma2Unlocked = true;
+                checkAchievements(g); }
+            g.rebirthCount += 1;
+            if (gt(g.power, g.maxRebirthPower)) g.maxRebirthPower = g.power;
+            g.rebirthStartTime = Date.now();
+
+            // ---- 内挂：如果开启「重生保留数值」，则跳过重置 ----
+            if (g.keepOnRebirth) {
+                // 只重置时间相关（让时间储存归零，避免无限利用）
+                g.storedTime = 0;
+                g.timeSpeed = 1;
+                g.timeEnabled = false;
+                // 其他全部保留
+                g.samsaraUnlocked = true;
+                checkAchievements(g);
+                return;
+            }
+
+            // ---- 正常重置逻辑 ----
+            RES_DEFS.forEach(d => {
+                let r = g.resources[d.id];
+                r.count = D(0);
+                r.mult = D(1);
+                r.price = D(d.initPrice);
+                r.unlocked = false;
+                g.resourcePriceMultVars[d.id] = D(d.priceMult);
+            });
+            g.mBase = D(1);
+            g.power = D(0);
+            g.enhanceCount = 0;
+            g.enhancePrice = D(ENHANCE_INIT_PRICE);
+            g.enhancePriceMult = D(10);
+            g.enhanceMult = D(1);
+            g.amplifyCount = 0;
+            g.amplifyPriceMult = D(AMPLIFY_BASE_MULT);
+            g.amplifyNextCost = D(AMPLIFY_BASE_COST);
+            g.breakCount = 0;
+            g.breakIndex = D(1);
+            g.breakThreshold = D(BREAK_INIT_THRESHOLD);
+            g.breakUnlocked = false;
+            g.enhanceUsed = false;
+            g.breakUsed = false;
+            g.amplifyUsed = false;
+            computeEnhancedMult(g);
+            g.storedTime = 0;
+            g.timeSpeed = 1;
+            g.timeEnabled = false;
+            g.samsaraUnlocked = true;
+            checkAchievements(g);
+        }
+
+        // ===== DOM 引用 =====
+        function $(i) { return document.getElementById(i) }
+
+        function fmtTime(ms) {
+            let s = Math.floor(ms / 1000),
+                sec = s % 60,
+                min = Math.floor(s / 60) % 60,
+                h = Math.floor(s / 3600);
+            if (h) return h + 'h ' + min + 'm ' + sec + 's';
+            if (min) return min + 'm ' + sec + 's';
+            return sec + 's';
+        }
+
+        function fmtSeconds(sec) {
+            let s = Math.floor(sec),
+                m = Math.floor(s / 60),
+                h = Math.floor(m / 60),
+                d = Math.floor(h / 24);
+            if (d > 0) return d + 'd ' + h % 24 + 'h ' + m % 60 + 'm ' + s % 60 + 's';
+            if (h > 0) return h + 'h ' + m % 60 + 'm ' + s % 60 + 's';
+            if (m > 0) return m + 'm ' + s % 60 + 's';
+            return s + 's';
+        }
+
+        let frameCount = 0,
+            lastFpsUpdate = Date.now(),
+            saveInterval = 30,
+            lastAchHash = '';
+
+        function getAchHash(g) { return g.achBits.join(',') }
+
+        // ===== 渲染 =====
+        function renderAchievements() {
+            let g = game,
+                grid = $('achGrid');
+            if (!grid) return;
+            let hash = getAchHash(g);
+            if (hash === lastAchHash) return;
+            lastAchHash = hash;
+            let cols = g.achColumnCount || 5;
+            grid.style.gridTemplateColumns = 'repeat(' + cols + ',1fr)';
+            let html = '';
+            ACH_DEFS.forEach(a => {
+                let unlocked = isAchUnlocked(g, a.id);
+                html += '<div class="ach-item' + (unlocked ? ' unlocked' : '') + '"><div class="ach-id">ACH' + a.id +
+                    '</div><div class="ach-name">' + (unlocked ? a.name : '??') + '</div><div class="ach-tip">' + a
+                    .name + ': ' + a.desc + '</div></div>';
+            });
+            grid.innerHTML = html;
+        }
+
+        function renderSUT() {
+            let g = game,
+                container = $('sutTree');
+            let html = '';
+            let revealed = Object.keys(g.sutRevealed).filter(c => SUT_NODES[c]);
+            revealed.sort((a, b) => parseInt(a, 2) - parseInt(b, 2));
+            revealed.forEach(c => {
+                let n = SUT_NODES[c];
+                let bought = !!g.sutBought[c];
+                let can = canBuySUT(g, c);
+                let price = n.price;
+                if (c.startsWith('10') && c.length >= 4) price = g.dynamicPriceGroup;
+                let cls = 'sut-node';
+                if (bought) cls += ' bought';
+                else if (can) cls += ' can-buy';
+                else if (g.sutRevealed[c]) cls += ' unlocked';
+                let idNum = parseInt(c, 2);
+                let effect = '';
+                if (c === '1') { let e = getAttackExtraMult(g);
+                    effect = '当前：×' + fmt(e) } else if (c === '10') { let e = g.enhanceMult;
+                    effect = '当前强化倍率：' + fmt(e) } else if (c === '11') { let d = getAmplifyDiscount(g);
+                    effect = '当前价格倍率：' + fmt(d) } else if (c === '100') { effect = '公式已' + (bought ? '替换' :
+                        '未替换') } else if (c === '101') { effect = '倍率' + (bought ? '不重置' : '重置') } else if (c ===
+                    '110') { effect = '战力' + (bought ? '扣需求' : '归零') } else if (c === '111') { effect = '已解锁' + (
+                        bought ? '加速' : '') } else if (c.startsWith('10') && c.length >= 4) {
+                    let map = { '1000': '陆', '1001': '砖', '1010': '墙', '1011': '屋', '1100': '楼', '1101': '街',
+                        '1110': '城', '1111': '国' };
+                    let rid = map[c];
+                    if (rid) { let ex = getResourceExtraMult(g, rid);
+                        effect = '当前：×' + fmt(ex) }
+                }
+                html += '<div class="' + cls + '" onclick="tryBuySUT(\'' + c + '\')"><div class="sut-id">SUT' + idNum +
+                    '</div><div class="sut-name">' + n.name + '</div><div class="sut-desc">' + n.desc + '</div>' + (
+                        effect ? '<div class="sut-effect">' + effect + '</div>' : '') +
+                    '<div class="sut-price">' + (bought ? '已购买' : '价格：' + fmt(price) + ' 业力') + '</div></div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function tryBuySUT(c) { let g = game; if (canBuySUT(g, c)) { buySUT(g, c);
+                updateUI() } }
+
+        function applyColumnCount() {
+            let cols = Math.min(5, Math.max(2, game.columnCount));
+            document.querySelectorAll('.btn-row').forEach(row => { row.style.gridTemplateColumns = 'repeat(' + cols +
+                    ',1fr)' });
+        }
+
+        function renderResourcePanel() {
+            let g = game,
+                html = '';
+            if (g.enhanceUsed || g.enhanceCount > 0) html += '<div>强化次数：' + g.enhanceCount + '，强化倍率：' + fmt(g
+                .enhanceMult) + '</div>';
+            if (g.amplifyUsed || g.amplifyCount > 0) html += '<div>增幅次数：' + g.amplifyCount + '，当前价格倍率：' + fmt(
+                getAmplifyDiscount(g)) + '</div>';
+            if (g.breakUsed || g.breakCount > 0) html += '<div>突破次数：' + g.breakCount + '，突破指数：' + g.breakIndex
+                .toFixed(4) + '</div>';
+            if (html) html += '<div class="divider"></div>';
+            html += '<div>基础攻击 (mBase)：' + fmt(g.mBase) + '</div><div class="divider"></div>';
+            RES_DEFS.forEach(def => {
+                if (g.revealed.resources[def.id]) {
+                    let r = g.resources[def.id];
+                    let tm = r.mult.times(g.enhanceMult).times(getResourceExtraMult(g, def.id));
+                    html += '<div class="resource-line"><span class="res-name">' + def.label +
+                        '</span><span class="res-detail">数目：' + fmt(r.count) + ' | 基础倍率' + fmt(r.mult) +
+                        '×强化' + fmt(g.enhanceMult) + '=总倍率' + fmt(tm) + '</span></div>';
+                }
+            });
+            $('resourceBox').innerHTML = html;
+        }
+
+        function renderStatsPanel() {
+            let g = game;
+            $('totalPowerStat').textContent = fmt(g.totalPowerProduced);
+            $('totalKarmaStat').textContent = fmt(g.totalKarma);
+            $('creationTimeStat').textContent = new Date(g.creationTime).toLocaleString();
+            $('currentTimeStat').textContent = new Date().toLocaleString();
+            let show = g.rebirthCount > 0;
+            ['rebirthStatItem', 'maxPowerStatItem', 'elapsedStatItem'].forEach(id => {
+                let el = $(id);
+                if (show) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            $('rebirthCountStat').textContent = g.rebirthCount;
+            $('maxRebirthPowerStat').textContent = fmt(g.maxRebirthPower);
+            $('elapsedTimeStat').textContent = fmtTime(Date.now() - g.rebirthStartTime);
+        }
+
+        function syncTabs() {
+            let sr = game.resourceTabUnlocked || game.rebirthCount > 0;
+            document.querySelectorAll('.tab[data-page="pageResource"]').forEach(t => {
+                if (sr) t.classList.remove('hidden');
+                else t.classList.add('hidden');
+            });
+            let sa = game.revealed.auto || game.autoTabUnlocked || game.rebirthCount > 0;
+            document.querySelectorAll('.tab[data-page="pageAuto"]').forEach(t => {
+                if (sa) t.classList.remove('hidden');
+                else t.classList.add('hidden');
+            });
+            let ss = game.samsaraUnlocked || game.rebirthCount > 0;
+            document.querySelectorAll('.tab[data-page="pageSamsara"]').forEach(t => {
+                if (ss) t.classList.remove('hidden');
+                else t.classList.add('hidden');
+            });
+            let sac = game.rebirthCount > 0 || getAchCount(game) > 0;
+            document.querySelectorAll('.tab[data-page="pageAch"]').forEach(t => {
+                if (sac) t.classList.remove('hidden');
+                else t.classList.add('hidden');
+            });
+        }
+
+        // ===== 主UI更新 =====
+        function updateUI() {
+            let g = game;
+            $('powerText').textContent = fmt(g.power);
+            let sk = g.rebirthCount > 0;
+            if (sk) {
+                $('karmaLabel').style.display = 'block';
+                $('karmaDisplay').style.display = 'block';
+                $('karmaDisplay').textContent = fmt(g.karma);
+            } else {
+                $('karmaLabel').style.display = 'none';
+                $('karmaDisplay').style.display = 'none';
+            }
+            renderSUT();
+            renderAchievements();
+            if (!g.revealed.enhance && gte(g.power, 1e5)) g.revealed.enhance = true;
+            let eb = $('enhanceBtn'),
+                er = $('enhanceReqLabel'),
+                es = $('enhanceSub');
+            if (g.revealed.enhance) {
+                eb.classList.remove('hidden');
+                let p = getDiscountedPrice(g.enhancePrice, g);
+                er.textContent = '所需：' + fmt(p);
+                eb.disabled = !gte(g.power, p);
+                eb.className = 'btn btn-purple' + (gte(g.power, p) ? '' : ' btn-gray');
+                let n = g.enhanceCount + 1,
+                    ad = D(n).pow(0.55).minus(0.5);
+                if (ad.lt(0)) ad = D(0);
+                es.textContent = '增加 +' + ad.toFixed(3);
+            } else eb.classList.add('hidden');
+            if (!g.revealed.amplify && gte(g.power, 1e7)) g.revealed.amplify = true;
+            let ab = $('amplifyBtn'),
+                ar = $('amplifyReqLabel'),
+                asb = $('amplifySub');
+            if (g.revealed.amplify) {
+                ab.classList.remove('hidden');
+                let c = g.amplifyNextCost;
+                ar.textContent = '需要：' + fmt(c);
+                ab.disabled = !gte(g.power, c);
+                ab.className = 'btn btn-amplify' + (gte(g.power, c) ? ' active' : ' btn-gray');
+                asb.textContent = '价格 × ' + fmt(getAmplifyDiscount(g));
+            } else ab.classList.add('hidden');
+            if (!g.revealed.break && gte(g.power, 1e9)) g.revealed.break = true;
+            let bb = $('breakBtn'),
+                br = $('breakReqLabel'),
+                bs = $('breakSub');
+            if (g.revealed.break) {
+                bb.classList.remove('hidden');
+                br.textContent = '需要：' + fmt(g.breakThreshold);
+                bb.disabled = !gte(g.power, g.breakThreshold);
+                bb.className = 'btn btn-red' + (gte(g.power, g.breakThreshold) ? '' : ' btn-gray');
+                let ci = g.breakIndex,
+                    fi = D(1);
+                if (gte(g.power, g.breakThreshold)) {
+                    let p = g.power;
+                    if (p.gt(1)) {
+                        let logp = log10(p);
+                        if (logp.gt(0)) {
+                            let inside = D(1).plus(logp.div(40));
+                            if (g.sutBought['100']) fi = D(1).plus(ln(inside).div(2.5));
+                            else fi = D(1).plus(ln(inside).div(3.25));
+                            if (fi.lt(1)) fi = D(1);
+                        }
+                    }
+                }
+                let r = fi.div(ci);
+                if (r.lt(1)) r = D(1);
+                bs.textContent = '突破指数：' + ci.toFixed(4) + ' → ' + fi.toFixed(4) + ' (×' + r.toFixed(3) + ')';
+            } else bb.classList.add('hidden');
+            let rb = $('rebirthBtn');
+            if (gte(g.power, REBIRTH_THRESHOLD)) rb.classList.remove('hidden');
+            else rb.classList.add('hidden');
+            let row = $('rowResources');
+            row.innerHTML = '';
+            RES_DEFS.forEach(def => {
+                let r = g.resources[def.id];
+                if (!g.revealed.resources[def.id] && gte(g.power, def.initPrice / 10)) g.revealed.resources[
+                    def.id] = true;
+                if (g.revealed.resources[def.id]) {
+                    let btn = document.createElement('button');
+                    btn.className = 'btn ' + def.color;
+                    let p = getDiscountedPrice(r.price, g);
+                    btn.disabled = !(r.unlocked && gte(g.power, p));
+                    btn.innerHTML = '获得' + def.label + '<small>需要：' + fmt(p) + '</small>';
+                    btn.dataset.id = def.id;
+                    btn.addEventListener('click', () => { buyResource(g, def.id);
+                        updateUI() });
+                    let t = null;
+                    btn.addEventListener('mousedown', () => { buyResource(g, def.id);
+                        updateUI();
+                        t = setInterval(() => { buyResource(g, def.id);
+                            updateUI() }, g.loopRateMs) });
+                    btn.addEventListener('mouseup', () => clearInterval(t));
+                    btn.addEventListener('mouseleave', () => clearInterval(t));
+                    btn.addEventListener('touchstart', (e) => { e.preventDefault();
+                        buyResource(g, def.id);
+                        updateUI();
+                        t = setInterval(() => { buyResource(g, def.id);
+                            updateUI() }, g.loopRateMs) });
+                    btn.addEventListener('touchend', () => clearInterval(t));
+                    row.appendChild(btn);
+                }
+            });
+            applyColumnCount();
+            if (!g.revealed.auto && gte(g.power, 1e19)) g.revealed.auto = true;
+            if (g.revealed.auto) {
+                if (g.autoUnlocked) {
+                    $('autoPurchaseArea').style.display = 'none';
+                    $('autoControlArea').style.display = 'block';
+                    $('autoCheck').checked = g.autoEnabled;
+                    $('autoStatus').textContent = g.autoEnabled ? '运行中' : '已停止';
+                } else {
+                    $('autoPurchaseArea').style.display = 'block';
+                    $('autoControlArea').style.display = 'none';
+                    let can = gte(g.power, AUTO_PRICE);
+                    let abtn = $('autoBtn');
+                    abtn.classList.remove('hidden');
+                    $('autoReqLabel').textContent = '需要：' + fmt(AUTO_PRICE);
+                    abtn.className = 'btn btn-auto' + (can ? '' : ' btn-gray');
+                    abtn.disabled = !can;
+                    $('autoStatus').textContent = can ? '可购买' : '未解锁';
+                }
+                if (g.sutBought['111']) {
+                    $('autoSpeedArea').style.display = 'block';
+                    let speed = Math.pow(g.autoSpeedMult, g.autoSpeedLevel);
+                    $('autoSpeedLevel').textContent = speed.toFixed(1);
+                    let cost = g.autoSpeedLevel === 0 ? 1 : Math.pow(10, g.autoSpeedLevel - 1);
+                    $('autoSpeedCost').textContent = '需要：' + cost + '业力';
+                    let btn = $('autoSpeedBtn');
+                    btn.disabled = !(gte(g.karma, cost));
+                    btn.onclick = function() {
+                        if (gte(g.karma, cost)) {
+                            g.karma = g.karma.minus(cost);
+                            g.autoSpeedLevel += 1;
+                            if (speed > 1e10 && g.autoSpeedMult < 10) { g.autoSpeedMult = 10; }
+                            updateUI();
+                        }
+                    };
+                } else { $('autoSpeedArea').style.display = 'none' }
+            } else {
+                $('autoPurchaseArea').style.display = 'none';
+                $('autoControlArea').style.display = 'none';
+                $('autoSpeedArea').style.display = 'none';
+            }
+            renderResourcePanel();
+            renderStatsPanel();
+            syncTabs();
+            $('rateDisplayHint').textContent = '当前速率：' + g.loopRateMs + ' ms';
+            let stored = g.storedTime;
+            $('storedTimeDisplay').textContent = fmtSeconds(stored);
+            $('storedTimeFull').textContent = fmtSeconds(stored);
+            let loopSec = g.loopRateMs / 1000;
+            let input = $('timeSpeedInput');
+            let val = input.value.trim();
+            let speed = 1;
+            if (val !== '') {
+                let parsed = parseFloat(val);
+                if (!isNaN(parsed) && parsed >= 1) {
+                    if (val.toLowerCase().includes('e')) {
+                        try { speed = parseFloat(val); if (isNaN(speed) || speed < 1) speed = 1; } catch (e) { speed =
+                            1 }
+                    } else { speed = parsed; if (speed < 1) speed = 1; }
+                } else { speed = 1; }
+            } else { speed = 1; }
+            let status = $('timeStatusInfo');
+            let btn = $('timeToggleBtn');
+            let canEnable = speed > 1 && stored >= loopSec;
+            if (val === '') {
+                status.textContent = '你目前可以加速 ' + fmt(stored / loopSec) + ' 倍';
+            } else {
+                if (speed <= 1) { status.textContent = '请输入 ≥1 的数值'; } else {
+                    let dur = stored / (speed - 1);
+                    let durTicks = Math.floor(dur / loopSec);
+                    if (durTicks < 1) { status.textContent = '你目前储存的时间不足以支持该加速'; } else {
+                        let durSec = durTicks * loopSec;
+                        status.textContent = '将时间加速 ' + speed + ' 倍，持续 ' + fmtSeconds(durSec);
+                    }
+                }
+            }
+            if (g.timeEnabled && stored < loopSec) { g.timeEnabled = false;
+                g.timeSpeed = 1;
+                btn.textContent = '禁用';
+                btn.className = 'time-btn disabled'; } else if (g.timeEnabled && speed > 1 && canEnable) {
+                btn.textContent = '启用';
+                btn.className = 'time-btn enabled';
+                btn.disabled = false;
+            } else if (!g.timeEnabled && canEnable) { btn.textContent = '禁用';
+                btn.className = 'time-btn off';
+                btn.disabled = false; } else { btn.textContent = '禁用';
+                btn.className = 'time-btn disabled';
+                btn.disabled = true; }
+            if (g.timeEnabled) { g.timeSpeed = speed; }
+            frameCount++;
+            let now = Date.now();
+            if (now - lastFpsUpdate >= 1000) { $('fpsStat').textContent = frameCount;
+                frameCount = 0;
+                lastFpsUpdate = now; }
+
+            // 更新内挂面板的当前值（如果面板打开）
+            if ($('cheatOverlay').classList.contains('open')) {
+                populateCheatPanel();
+            }
+        }
+
+        // ===== 内挂面板 =====
+        function populateCheatPanel() {
+            let g = game;
+            $('chPower').value = g.power.toString();
+            $('chKarma').value = g.karma.toString();
+            $('chTotalKarma').value = g.totalKarma.toString();
+            $('chEnhanceCount').value = g.enhanceCount;
+            $('chAmplifyCount').value = g.amplifyCount;
+            $('chBreakCount').value = g.breakCount;
+            $('chMBase').value = g.mBase.toString();
+            $('chStoredTime').value = g.storedTime;
+            $('chEnhanceMult').value = g.enhanceMult.toString();
+            $('chBreakIndex').value = g.breakIndex.toString();
+            $('chRebirthCount').value = g.rebirthCount;
+            $('chMaxRebirthPower').value = g.maxRebirthPower.toString();
+            $('chKeepOnRebirth').checked = g.keepOnRebirth;
+            // 资源
+            RES_DEFS.forEach(d => {
+                let el = $('ch_res_' + d.id);
+                if (el) el.value = g.resources[d.id].count.toString();
+            });
+        }
+
+        function applyCheatValues() {
+            let g = game;
+            try {
+                let v = D($('chPower').value.trim() || '0');
+                if (v.gte(0)) g.power = v;
+            } catch (e) {}
+            try {
+                let v = D($('chKarma').value.trim() || '0');
+                if (v.gte(0)) g.karma = v;
+            } catch (e) {}
+            try {
+                let v = D($('chTotalKarma').value.trim() || '0');
+                if (v.gte(0)) g.totalKarma = v;
+            } catch (e) {}
+            try {
+                let v = parseInt($('chEnhanceCount').value.trim()) || 0;
+                if (v >= 0) g.enhanceCount = v;
+            } catch (e) {}
+            try {
+                let v = parseInt($('chAmplifyCount').value.trim()) || 0;
+                if (v >= 0) g.amplifyCount = v;
+            } catch (e) {}
+            try {
+                let v = parseInt($('chBreakCount').value.trim()) || 0;
+                if (v >= 0) g.breakCount = v;
+            } catch (e) {}
+            try {
+                let v = D($('chMBase').value.trim() || '1');
+                if (v.gte(0)) g.mBase = v;
+            } catch (e) {}
+            try {
+                let v = parseFloat($('chStoredTime').value.trim()) || 0;
+                if (v >= 0) g.storedTime = v;
+            } catch (e) {}
+            try {
+                let v = D($('chEnhanceMult').value.trim() || '1');
+                if (v.gte(0)) g.enhanceMult = v;
+            } catch (e) {}
+            try {
+                let v = D($('chBreakIndex').value.trim() || '1');
+                if (v.gte(0)) g.breakIndex = v;
+            } catch (e) {}
+            try {
+                let v = parseInt($('chRebirthCount').value.trim()) || 0;
+                if (v >= 0) g.rebirthCount = v;
+            } catch (e) {}
+            try {
+                let v = D($('chMaxRebirthPower').value.trim() || '0');
+                if (v.gte(0)) g.maxRebirthPower = v;
+            } catch (e) {}
+            // 资源
+            RES_DEFS.forEach(d => {
+                let el = $('ch_res_' + d.id);
+                if (el) {
+                    try {
+                        let v = D(el.value.trim() || '0');
+                        if (v.gte(0)) g.resources[d.id].count = v;
+                    } catch (e) {}
+                }
+            });
+            // 重生保留数值
+            g.keepOnRebirth = $('chKeepOnRebirth').checked;
+            // 重新计算衍生
+            computeEnhancedMult(g);
+            // 保存
+            saveGame(g);
+            updateUI();
+        }
+
+        function toggleCheatOverlay(open) {
+            let overlay = $('cheatOverlay');
+            if (open) {
+                populateCheatPanel();
+                overlay.classList.add('open');
+            } else {
+                overlay.classList.remove('open');
+            }
+        }
+
+        // ===== 游戏循环 =====
+        let gameLoopTimer = null;
+
+        function gameLoopTick() {
+            let g = game,
+                dt = Math.min(g.loopRateMs / 1000, 1);
+            let tm = g.timeEnabled ? g.timeSpeed : 1;
+            if (g.timeEnabled && tm > 1) {
+                let cost = (tm - 1) * dt;
+                if (g.storedTime >= cost) { g.storedTime -= cost; } else { g.storedTime = 0;
+                    g.timeEnabled = false;
+                    g.timeSpeed = 1; }
+            }
+            updateProduction(g, dt);
+            if (g.autoEnabled && g.autoUnlocked) {
+                let baseSpeed = Math.pow(g.autoSpeedMult, g.autoSpeedLevel);
+                let effectiveSpeed = baseSpeed * tm;
+                let interval = 1 / effectiveSpeed;
+                let atkBase = g.mBase.times(g.enhanceMult).times(getAttackExtraMult(g));
+                if (interval <= dt) {
+                    let total = atkBase.times(effectiveSpeed).times(dt);
+                    g.power = g.power.plus(total);
+                    g.totalPowerProduced = g.totalPowerProduced.plus(total);
+                } else {
+                    g.autoAccumulator += dt;
+                    while (g.autoAccumulator >= interval) {
+                        g.autoAccumulator -= interval;
+                        let atk = atkBase.times(tm);
+                        g.power = g.power.plus(atk);
+                        g.totalPowerProduced = g.totalPowerProduced.plus(atk);
+                    }
+                }
+            }
+            RES_DEFS.forEach(def => {
+                let r = g.resources[def.id];
+                if (!r.unlocked && gte(g.power, def.unlockPower)) r.unlocked = true;
+            });
+            if (!g.breakUnlocked && gte(g.power, g.breakThreshold)) g.breakUnlocked = true;
+            if (!g.autoTabUnlocked && gte(g.power, AUTO_UNLOCK_POWER)) g.autoTabUnlocked = true;
+            checkAchievements(g);
+            if (Math.random() < 0.05) saveGame(g);
+            updateUI();
+        }
+
+        function restartGameLoop() {
+            clearInterval(gameLoopTimer);
+            gameLoopTimer = setInterval(gameLoopTick, game.loopRateMs);
+        }
+
+        // ===== 存档管理 =====
+        function exportSave() {
+            let raw = localStorage.getItem(SAVE_KEY);
+            if (!raw) { $('exportTip').textContent = '没有存档数据';
+                $('exportTip').className = 'tip-text error-text'; return }
+            let encoded = btoa(unescape(encodeURIComponent(raw)));
+            let full = 'CombatPowerIncrement' + encoded + 'ArchiveEnd';
+            $('importInput').value = full;
+            $('exportTip').textContent = '存档编码已生成（含头尾标识），请手动复制';
+            $('exportTip').className = 'tip-text ok-text';
+        }
+
+        function importSave() {
+            let code = $('importInput').value.trim();
+            if (!code) { $('importTip').textContent = '请输入编码';
+                $('importTip').className = 'tip-text error-text'; return }
+            if (code === 'bl2378YYDS') {
+                game.power = game.power.plus(D('1.7977e308'));
+                $('importTip').textContent = '恭喜你发现了彩蛋！战力 +1.7977e308';
+                $('importTip').className = 'tip-text ok-text';
+                updateUI();
+                return;
+            }
+            let raw = code;
+            if (raw.startsWith('CombatPowerIncrement') && raw.endsWith('ArchiveEnd')) {
+                raw = raw.slice(20, -11);
+            } else { $('importTip').textContent = '存档格式错误（缺少头尾标识）';
+                $('importTip').className = 'tip-text error-text'; return }
+            try {
+                let decoded = decodeURIComponent(escape(atob(raw)));
+                let obj = JSON.parse(decoded);
+                let test = deserializeGame(obj);
+                if (test.power === undefined) throw new Error('无效存档');
+                localStorage.setItem(SAVE_KEY, decoded);
+                game = test;
+                computeEnhancedMult(game);
+                restartGameLoop();
+                updateUI();
+                $('importTip').textContent = '存档导入成功！';
+                $('importTip').className = 'tip-text ok-text';
+            } catch (e) { $('importTip').textContent = '存档格式错误';
+                $('importTip').className = 'tip-text error-text' }
+        }
+
+        // ===== 背景颜色 =====
+        function applyBgColor(idx) {
+            let colors = ['#000412', '#ffffff', '#3b0a0a', '#0a1a3b'];
+            let textColors = ['#e6edf7', '#000412', '#e6edf7', '#e6edf7'];
+            document.body.style.background = colors[idx];
+            document.body.style.color = textColors[idx];
+            document.querySelectorAll(
+                    '.tab,.sub-tab,.sut-node,.resource-box,.setting-box,.auto-box,.stats-box,.samsara-box,.time-box,.ach-box,.btn-row .btn,.setting-row input,.setting-row textarea,.time-input,.ach-item'
+                    )
+                .forEach(el => {
+                    el.style.background = idx === 0 ? '#1e293b' : idx === 1 ? '#d1d5db' : idx === 2 ? '#4a1a1a' :
+                        '#1a2a4a';
+                    if (el.style.background === '#d1d5db') el.style.color = '#000412';
+                    else el.style.color = '#e6edf7';
+                    if (el.classList.contains('ach-item') && el.classList.contains('unlocked') && idx !== 1) {
+                        el.style.background = '#0d5a1a';
+                    } else if (el.classList.contains('ach-item') && el.classList.contains('unlocked') && idx === 1) {
+                        el.style.background = '#2a8a3a';
+                        el.style.color = '#000412';
+                    }
+                });
+        }
+
+        // ===== 初始化 =====
+        let game = null;
+
+        function init() {
+            let saved = loadGame();
+            if (saved) game = saved;
+            else { game = makeDefaultGame();
+                game.resources['brick'].unlocked = true;
+                game.revealed.resources['brick'] = true; }
+            computeEnhancedMult(game);
+
+            // 设置初始值
+            $('rateInput').value = game.loopRateMs;
+            $('columnInput').value = game.columnCount;
+            $('achColumnInput').value = game.achColumnCount || 5;
+            $('saveIntervalInput').value = saveInterval;
+            applyBgColor(game.bgColor);
+
+            // 生成内挂资源输入框
+            let resRow = $('cheatResourceRow');
+            if (resRow) {
+                let rhtml = '';
+                RES_DEFS.forEach(d => {
+                    rhtml += '<div class="cheat-item"><label>' + d.label + '</label><input id="ch_res_' + d.id +
+                        '" type="text" value="' + game.resources[d.id].count.toString() + '"></div>';
+                });
+                resRow.innerHTML = rhtml;
+            }
+
+            // 标签页切换
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.onclick = function() {
+                    let tid = this.dataset.page;
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    document.getElementById(tid).classList.add('active');
+                    syncTabs();
+                };
+            });
+            document.querySelectorAll('.sub-tab').forEach(sub => {
+                sub.onclick = function() {
+                    let parent = this.closest('.page');
+                    let subId = this.dataset.sub;
+                    parent.querySelectorAll('.sub-page').forEach(p => p.classList.remove('active'));
+                    parent.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    let target = parent.querySelector('#sub' + subId.charAt(0).toUpperCase() + subId.slice(1));
+                    if (target) target.classList.add('active');
+                };
+            });
+
+            // 攻击按钮
+            $('mainClickBtn').addEventListener('click', () => {
+                let atk = game.mBase.times(game.enhanceMult).times(getAttackExtraMult(game));
+                let tm = game.timeEnabled ? game.timeSpeed : 1;
+                game.power = game.power.plus(atk.times(tm));
+                game.totalPowerProduced = game.totalPowerProduced.plus(atk.times(tm));
+                updateUI();
+            });
+            let mainBtn = $('mainClickBtn'),
+                timer = null;
+            ['mousedown', 'touchstart'].forEach(evt => {
+                mainBtn.addEventListener(evt, (e) => {
+                    if (evt === 'touchstart') e.preventDefault();
+                    let atk = game.mBase.times(game.enhanceMult).times(getAttackExtraMult(game));
+                    let tm = game.timeEnabled ? game.timeSpeed : 1;
+                    game.power = game.power.plus(atk.times(tm));
+                    game.totalPowerProduced = game.totalPowerProduced.plus(atk.times(tm));
+                    updateUI();
+                    timer = setInterval(() => {
+                        let atk2 = game.mBase.times(game.enhanceMult).times(getAttackExtraMult(game));
+                        let tm2 = game.timeEnabled ? game.timeSpeed : 1;
+                        game.power = game.power.plus(atk2.times(tm2));
+                        game.totalPowerProduced = game.totalPowerProduced.plus(atk2.times(tm2));
+                        updateUI();
+                    }, game.loopRateMs);
+                });
+            });
+            ['mouseup', 'mouseleave', 'touchend'].forEach(evt => mainBtn.addEventListener(evt, () => clearInterval(
+                timer)));
+
+            // 强化按钮
+            let enhBtn = $('enhanceBtn'),
+                enhTimer = null;
+            enhBtn.addEventListener('mousedown', () => { doEnhance(game);
+                updateUI();
+                enhTimer = setInterval(() => { doEnhance(game);
+                    updateUI() }, game.loopRateMs) });
+            enhBtn.addEventListener('mouseup', () => clearInterval(enhTimer));
+            enhBtn.addEventListener('mouseleave', () => clearInterval(enhTimer));
+            enhBtn.addEventListener('touchstart', (e) => { e.preventDefault();
+                doEnhance(game);
+                updateUI();
+                enhTimer = setInterval(() => { doEnhance(game);
+                    updateUI() }, game.loopRateMs) });
+            enhBtn.addEventListener('touchend', () => clearInterval(enhTimer));
+
+            // 增幅按钮
+            let ampBtn = $('amplifyBtn'),
+                ampTimer = null;
+            ampBtn.addEventListener('mousedown', () => { doAmplify(game);
+                updateUI();
+                ampTimer = setInterval(() => { doAmplify(game);
+                    updateUI() }, game.loopRateMs) });
+            ampBtn.addEventListener('mouseup', () => clearInterval(ampTimer));
+            ampBtn.addEventListener('mouseleave', () => clearInterval(ampTimer));
+            ampBtn.addEventListener('touchstart', (e) => { e.preventDefault();
+                doAmplify(game);
+                updateUI();
+                ampTimer = setInterval(() => { doAmplify(game);
+                    updateUI() }, game.loopRateMs) });
+            ampBtn.addEventListener('touchend', () => clearInterval(ampTimer));
+
+            $('breakBtn').onclick = () => { doBreak(game);
+                updateUI() };
+            $('rebirthBtn').onclick = () => { doRebirth(game);
+                updateUI() };
+            $('autoBtn').onclick = function() {
+                if (game.autoUnlocked) return;
+                if (!gte(game.power, AUTO_PRICE)) return;
+                game.power = game.power.minus(AUTO_PRICE);
+                game.autoUnlocked = true;
+                game.autoEnabled = true;
+                updateUI();
+            };
+            $('autoCheck').onchange = function() {
+                if (game.autoUnlocked) { game.autoEnabled = this.checked;
+                    updateUI() }
+            };
+
+            // 设置
+            $('applyRateBtn').onclick = function() {
+                let v = parseInt($('rateInput').value, 10);
+                if (isNaN(v)) { $('rateTip').textContent = '请输入数字';
+                    $('rateTip').className = 'tip-text error-text'; return }
+                v = Math.max(30, Math.min(200, v));
+                game.loopRateMs = v;
+                restartGameLoop();
+                $('rateTip').textContent = '已设置刷新速率 ' + v + ' ms';
+                $('rateTip').className = 'tip-text ok-text';
+                updateUI();
+            };
+            $('applyColumnBtn').onclick = function() {
+                let v = parseInt($('columnInput').value, 10);
+                if (isNaN(v)) { $('columnTip').textContent = '请输入数字';
+                    $('columnTip').className = 'tip-text error-text'; return }
+                v = Math.max(2, Math.min(5, v));
+                game.columnCount = v;
+                $('columnTip').textContent = '已设置列数为 ' + v;
+                $('columnTip').className = 'tip-text ok-text';
+                applyColumnCount();
+            };
+            $('applyAchColumnBtn').onclick = function() {
+                let v = parseInt($('achColumnInput').value, 10);
+                if (isNaN(v) || v < 4 || v > 6) { $('achColumnTip').textContent = '请输入4-6之间的数字';
+                    $('achColumnTip').className = 'tip-text error-text'; return }
+                game.achColumnCount = v;
+                $('achColumnTip').textContent = '成就列数已设为 ' + v;
+                $('achColumnTip').className = 'tip-text ok-text';
+                renderAchievements();
+            };
+            $('resetBtn').onclick = function() {
+                let iv = $('resetInput').value.trim();
+                if (iv !== RESET_PASSWORD) { $('resetTip').textContent = '输入文本不正确';
+                    $('resetTip').className = 'tip-text error-text'; return }
+                localStorage.removeItem(SAVE_KEY);
+                game = makeDefaultGame();
+                game.resources['brick'].unlocked = true;
+                game.revealed.resources['brick'] = true;
+                computeEnhancedMult(game);
+                restartGameLoop();
+                $('resetTip').textContent = '游戏重置完成！';
+                $('resetTip').className = 'tip-text ok-text';
+                $('resetInput').value = '';
+                updateUI();
+            };
+            $('exportBtn').onclick = exportSave;
+            $('importBtn').onclick = importSave;
+            $('applySaveIntervalBtn').onclick = function() {
+                let v = parseInt($('saveIntervalInput').value, 10);
+                if (isNaN(v) || v < 10 || v > 60) { $('saveIntervalTip').textContent = '请输入10-60之间的数字';
+                    $('saveIntervalTip').className = 'tip-text error-text'; return }
+                saveInterval = v;
+                $('saveIntervalTip').textContent = '自动存档间隔已设为 ' + v + ' 秒';
+                $('saveIntervalTip').className = 'tip-text ok-text';
+            };
+
+            // 时间
+            $('timeToggleBtn').onclick = function() {
+                let g = game;
+                let val = $('timeSpeedInput').value.trim();
+                let speed = 1;
+                if (val !== '') {
+                    let parsed = parseFloat(val);
+                    if (!isNaN(parsed) && parsed >= 1) {
+                        if (val.toLowerCase().includes('e')) {
+                            try { speed = parseFloat(val); if (isNaN(speed) || speed < 1) speed = 1; } catch (e) {
+                                speed = 1 }
+                        } else { speed = parsed; if (speed < 1) speed = 1; }
+                    }
+                }
+                if (!g.timeEnabled && g.storedTime >= g.loopRateMs / 1000 && speed > 1) {
+                    g.timeEnabled = true;
+                    g.timeSpeed = speed;
+                } else if (g.timeEnabled) {
+                    g.timeEnabled = false;
+                    g.timeSpeed = 1;
+                }
+                updateUI();
+            };
+            $('timeSpeedInput').addEventListener('input', function() { updateUI(); });
+
+            // 背景颜色
+            let colorBtn = $('colorCycleBtn');
+            colorBtn.onclick = function() {
+                let colors = ['黑色', '白色', '红色', '蓝色'];
+                game.bgColor = (game.bgColor + 1) % 4;
+                applyBgColor(game.bgColor);
+                this.textContent = '当前: ' + colors[game.bgColor];
+            };
+
+            // 页面可见性变化 - 离线时间储存
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    game._lastLeave = Date.now();
+                } else if (game._lastLeave) {
+                    let elapsed = (Date.now() - game._lastLeave) / 1000;
+                    if (elapsed > 10) {
+                        let achMult = getAchMult(game);
+                        game.storedTime += elapsed * achMult.toNumber();
+                    }
+                    game._lastLeave = null;
+                    updateUI();
+                }
+            });
+
+            // ===== 内挂按键 Y =====
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'y' || e.key === 'Y') {
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                    e.preventDefault();
+                    toggleCheatOverlay(!$('cheatOverlay').classList.contains('open'));
+                }
+                // ESC 关闭内挂
+                if (e.key === 'Escape' && $('cheatOverlay').classList.contains('open')) {
+                    toggleCheatOverlay(false);
+                }
+            });
+
+            $('cheatOkBtn').onclick = function() {
+                applyCheatValues();
+                toggleCheatOverlay(false);
+            };
+            $('cheatCancelBtn').onclick = function() {
+                toggleCheatOverlay(false);
+            };
+            // 点击遮罩关闭
+            $('cheatOverlay').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    toggleCheatOverlay(false);
+                }
+            });
+
+            updateUI();
+            restartGameLoop();
+            setInterval(() => { saveGame(game) }, saveInterval * 1000);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
