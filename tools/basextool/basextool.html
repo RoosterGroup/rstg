@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RstgBase 编解码工具箱</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>RstgBase 编解码工具箱</h1>
+    <p class="sub">
+      一个网页集成多种 Base 系编解码器：Base64 / Base91，以及基于汉字与全 Unicode 的
+      RstgBase2500 · RstgBase3k · RstgBase8k · RstgBase87k · RstgMAX-Base1M。
+      除 Base64 / Base91 外，其余均内置 LZ 压缩（默认最大等级），信息密度远高于 Base64。
+    </p>
+  </header>
+
+  <div class="toolbar">
+    <label class="tb-field">
+      <span>编解码器</span>
+      <select id="codec"></select>
+    </label>
+    <span class="meta" id="meta"></span>
+    <label class="tb-check" id="compressWrap">
+      <input type="checkbox" id="useCompress" checked>
+      <span>压缩</span>
+    </label>
+    <label class="tb-field" id="levelWrap">
+      <span>压缩等级</span>
+      <select id="level">
+        <option value="quick">快速</option>
+        <option value="normal">标准</option>
+        <option value="max" selected>最大</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-head">
+        <b>输入</b>
+        <span class="count" id="inCount">0 字符</span>
+      </div>
+      <textarea id="input" placeholder="在此输入要编码的文本…（或粘贴要解码的结果）"
+                spellcheck="false" autocomplete="off"></textarea>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <b>输出</b>
+        <span class="count" id="outCount">0 字符</span>
+      </div>
+      <textarea id="output" placeholder="结果将显示在这里…"
+                spellcheck="false" autocomplete="off" readonly></textarea>
+    </section>
+  </div>
+
+  <div class="actions">
+    <button id="btnEncode" class="primary">编码 →</button>
+    <button id="btnDecode" class="primary2">← 解码</button>
+    <button id="btnSwap">⇅ 输出转输入</button>
+    <button id="btnCopy">复制输出</button>
+    <button id="btnDemo">示例</button>
+    <button id="btnClear">清空</button>
+  </div>
+
+  <div class="status" id="status">就绪。选择编解码器后输入文本，点击「编码 →」。</div>
+
+  <details class="info">
+    <summary>当前编解码器说明</summary>
+    <div class="info-body" id="infoBody"></div>
+  </details>
+
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/b64.js"></script>
+<script src="js/b91.js"></script>
+<script src="js/rb2500.js"></script>
+<script src="js/rb3k.js"></script>
+<script src="js/rb8k.js"></script>
+<script src="js/rb87k.js"></script>
+<script src="js/rstgmb1m.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
