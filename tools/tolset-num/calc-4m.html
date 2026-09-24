@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>高精度计算器 · 524288位 / 32位小数</title>
+<style>
+  :root{
+    --bg:#0b0e13; --bg2:#11151c; --card:#151a22; --card2:#1b212b;
+    --line:#242c38; --txt:#e6edf6; --dim:#8b98ab; --dim2:#5f6c80;
+    --acc:#38e0b0; --acc2:#4aa8ff; --warn:#ffb648; --err:#ff6b6b;
+    --mono:"JetBrains Mono","Cascadia Code","SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:
+      radial-gradient(1200px 600px at 15% -10%, #16303a 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, #1d2340 0%, transparent 55%),
+      var(--bg);
+    color:var(--txt);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1280px;margin:0 auto;padding:22px 20px 40px}
+  header{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+  h1{margin:0;font-size:20px;letter-spacing:.5px;font-weight:650}
+  h1 span{color:var(--acc)}
+  .sub{color:var(--dim);font-size:12.5px}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border:1px solid var(--line);
+    border-radius:999px;color:var(--dim);font-size:11.5px;background:#0f131a}
+  .badge b{color:var(--acc);font-weight:600}
+
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+  @media (max-width:1000px){.layout{grid-template-columns:minmax(0,1fr)}}
+
+  .card{background:linear-gradient(180deg,var(--card) 0%, #12171f 100%);
+    border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .pad-card{padding:14px}
+
+  /* ---------- IO ---------- */
+  .io{display:flex;flex-direction:column;gap:10px}
+  .field{position:relative}
+  .field label{position:absolute;top:-8px;left:12px;padding:0 6px;background:#141922;
+    font-size:11px;color:var(--dim2);border-radius:4px;z-index:2}
+  textarea{
+    width:100%;background:#0d1117;color:var(--txt);border:1px solid var(--line);
+    border-radius:10px;padding:12px;font-family:var(--mono);font-size:15px;line-height:1.7;
+    resize:vertical;outline:none;word-break:break-all;white-space:pre-wrap;overflow:auto;
+  }
+  textarea:focus{border-color:#2f7d6a;box-shadow:0 0 0 3px rgba(56,224,176,.10)}
+  #expr{min-height:52px;max-height:220px}
+  #out{min-height:96px;height:190px;color:var(--acc);font-size:15.5px;letter-spacing:.2px}
+  #out.err{color:var(--err)}
+  #out.busy{color:var(--dim)}
+
+  .status{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--dim);
+    font-family:var(--mono)}
+  .status .chip{background:#0f141b;border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+  .status .chip b{color:var(--txt);font-weight:600}
+  .status .chip.warn b{color:var(--warn)}
+  .status .chip.ok b{color:var(--acc)}
+
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip-btn{background:#131922;border:1px solid var(--line);color:var(--dim);border-radius:7px;
+    padding:4px 8px;font-family:var(--mono);font-size:11.5px;cursor:pointer;transition:.15s}
+  .chip-btn:hover{color:var(--acc);border-color:#2f7d6a;background:#141c22}
+
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{background:#182029;border:1px solid var(--line);color:var(--txt);border-radius:9px;
+    padding:7px 12px;font-size:12.5px;cursor:pointer;transition:.15s}
+  .btn:hover{border-color:#2f7d6a;color:var(--acc)}
+  .btn.primary{background:linear-gradient(180deg,#2bb98f,#1e8f6d);border-color:#2bb98f;color:#04120d;font-weight:650}
+  .btn.primary:hover{filter:brightness(1.08);color:#04120d}
+  .btn.ghost{background:transparent}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ---------- keypad ---------- */
+  .pad{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+  .key{height:52px;border-radius:11px;border:1px solid var(--line);background:linear-gradient(180deg,#1a212b,#151a22);
+    color:var(--txt);font-size:17px;font-family:var(--mono);cursor:pointer;user-select:none;
+    display:flex;align-items:center;justify-content:center;transition:.12s;box-shadow:0 2px 0 rgba(0,0,0,.25)}
+  .key:hover{border-color:#2f7d6a;background:linear-gradient(180deg,#1e2a34,#171d26)}
+  .key:active{transform:translateY(1px);box-shadow:none}
+  .key.op{color:var(--acc2);font-size:18px}
+  .key.fn{color:var(--dim);font-size:13px}
+  .key.eq{background:linear-gradient(180deg,#2bb98f,#1e8f6d);border-color:#2bb98f;color:#04120d;font-weight:700;font-size:19px}
+  .key.eq:hover{filter:brightness(1.08)}
+  .key.mem{color:var(--warn);font-size:13px}
+  .key.wide{grid-column:span 2}
+
+  /* ---------- side ---------- */
+  .side{display:flex;flex-direction:column;gap:14px}
+  .side .card{padding:14px}
+  .side h3{margin:0 0 10px;font-size:13px;color:var(--dim);letter-spacing:.6px;font-weight:600}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;font-size:12.5px;color:var(--dim)}
+  .row input[type=number],.row select{background:#0d1117;border:1px solid var(--line);color:var(--txt);
+    border-radius:7px;padding:5px 7px;width:120px;font-family:var(--mono);font-size:12px}
+  .row input[type=checkbox]{accent-color:var(--acc);width:15px;height:15px}
+  .hint{font-size:11.5px;color:var(--dim2);line-height:1.6}
+  .hist{max-height:340px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+  .hist-item{background:#0f141b;border:1px solid var(--line);border-radius:8px;padding:7px 9px;cursor:pointer;transition:.15s}
+  .hist-item:hover{border-color:#2f7d6a}
+  .hist-item .e{font-family:var(--mono);font-size:11.5px;color:var(--dim);word-break:break-all}
+  .hist-item .r{font-family:var(--mono);font-size:12.5px;color:var(--acc);word-break:break-all;margin-top:2px}
+  .empty{color:var(--dim2);font-size:12px;text-align:center;padding:16px 0}
+  .foot{margin-top:18px;color:var(--dim2);font-size:11.5px;text-align:center;line-height:1.8}
+  kbd{background:#0f141b;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;
+    padding:1px 5px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#2a3340;border-radius:8px;border:2px solid #0d1117}
+  ::-webkit-scrollbar-track{background:#0d1117}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>高精度<span>计算器</span></h1>
+    <div class="sub">任意精度十进制内核 · 完整数字输出 · 永不使用科学计数法</div>
+    <div class="badge">整数上限 <b id="badgeDigits">524288</b> 位</div>
+    <div class="badge">小数 <b id="badgeFrac">32</b> 位真实精度</div>
+    <div class="badge" id="badgeMode">Worker 已就绪</div>
+  </header>
+
+  <div class="layout">
+    <!-- ============ 主区 ============ -->
+    <div>
+      <div class="card pad-card">
+        <div class="io">
+          <div class="field">
+            <label>表达式（可直接粘贴超长数字）</label>
+            <textarea id="expr" spellcheck="false" placeholder="例：(2^1740743 + 1) / 7   或   0.1 + 0.2   或   sqrt(2)"></textarea>
+          </div>
+
+          <div class="chips" id="fnChips">
+            <button class="chip-btn" data-ins="sqrt(">sqrt(</button>
+            <button class="chip-btn" data-ins="abs(">abs(</button>
+            <button class="chip-btn" data-ins="floor(">floor(</button>
+            <button class="chip-btn" data-ins="ceil(">ceil(</button>
+            <button class="chip-btn" data-ins="round(">round(</button>
+            <button class="chip-btn" data-ins="trunc(">trunc(</button>
+            <button class="chip-btn" data-ins="mod(">mod(</button>
+            <button class="chip-btn" data-ins="pow(">pow(</button>
+            <button class="chip-btn" data-ins="gcd(">gcd(</button>
+            <button class="chip-btn" data-ins="lcm(">lcm(</button>
+            <button class="chip-btn" data-ins="fact(">fact(</button>
+            <button class="chip-btn" data-ins="pi">pi</button>
+            <button class="chip-btn" data-ins="e">e</button>
+            <button class="chip-btn" data-ins="^">^</button>
+            <button class="chip-btn" data-ins="*10^">×10^</button>
+          </div>
+
+          <div class="field">
+            <label>结果</label>
+            <textarea id="out" readonly spellcheck="false" placeholder="结果将完整显示在这里，不做任何 e 记法简写"></textarea>
+          </div>
+
+          <div class="status" id="status">
+            <span class="chip">状态 <b id="stState">就绪</b></span>
+            <span class="chip">整数 <b id="stInt">0</b> 位</span>
+            <span class="chip">小数 <b id="stFrac">0</b> 位</span>
+            <span class="chip">共 <b id="stChars">0</b> 字符</span>
+            <span class="chip">耗时 <b id="stMs">0</b> ms</span>
+            <span class="chip" id="stExactWrap">精度 <b id="stExact">—</b></span>
+            <span class="chip warn" id="stTruncWrap" style="display:none">屏幕仅显示前 <b id="stTrunc">0</b> 位（复制/下载为完整值）</span>
+          </div>
+
+          <div class="actions">
+            <button class="btn primary" id="btnCalc">计算 =</button>
+            <button class="btn" id="btnCopy">复制完整结果</button>
+            <button class="btn" id="btnSave">下载 .txt</button>
+            <button class="btn ghost" id="btnAbort" disabled>中止</button>
+            <button class="btn ghost" id="btnSelf">性能自检</button>
+            <button class="btn ghost" id="btnClearHist">清空历史</button>
+          </div>
+        </div>
+
+        <div class="pad">
+          <button class="key mem" data-key="MC">MC</button>
+          <button class="key mem" data-key="MR">MR</button>
+          <button class="key mem" data-key="M+">M+</button>
+          <button class="key mem" data-key="M-">M-</button>
+          <button class="key mem" data-key="MS">MS</button>
+
+          <button class="key fn" data-key="C">C</button>
+          <button class="key fn" data-key="BK">⌫</button>
+          <button class="key" data-ins="(">(</button>
+          <button class="key" data-ins=")">)</button>
+          <button class="key op" data-ins="÷">÷</button>
+
+          <button class="key" data-ins="7">7</button>
+          <button class="key" data-ins="8">8</button>
+          <button class="key" data-ins="9">9</button>
+          <button class="key op" data-ins="×">×</button>
+          <button class="key fn" data-ins="mod(">mod</button>
+
+          <button class="key" data-ins="4">4</button>
+          <button class="key" data-ins="5">5</button>
+          <button class="key" data-ins="6">6</button>
+          <button class="key op" data-ins="−">−</button>
+          <button class="key fn" data-key="SQRT">√</button>
+
+          <button class="key" data-ins="1">1</button>
+          <button class="key" data-ins="2">2</button>
+          <button class="key" data-ins="3">3</button>
+          <button class="key op" data-ins="+">+</button>
+          <button class="key fn" data-ins="^">xʸ</button>
+
+          <button class="key" data-key="NEG">±</button>
+          <button class="key" data-ins="0">0</button>
+          <button class="key" data-ins=".">.</button>
+          <button class="key fn" data-key="INV">1/x</button>
+          <button class="key eq" data-key="=">=</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 侧栏 ============ -->
+    <aside class="side">
+      <div class="card">
+        <h3>精度设置</h3>
+        <div class="row"><span>显示小数位数</span><input type="number" id="setFrac" value="32" min="0" max="100000" step="1"></div>
+        <div class="row"><span>内部保护位</span><input type="number" id="setGuard" value="8" min="0" max="64" step="1"></div>
+        <div class="row"><span>整数位数上限</span>
+          <select id="setMaxDigits">
+            <option value="65536">65 536</option>
+            <option value="262144">262 144</option>
+            <option value="524288" selected>524 288</option>
+            <option value="1048576">1 048 576</option>
+            <option value="4194304">4 194 304</option>
+          </select>
+        </div>
+        <div class="row"><span>屏幕显示上限</span>
+          <select id="setViewMax">
+            <option value="10000">10 000 字符</option>
+            <option value="50000" selected>50 000 字符</option>
+            <option value="200000">200 000 字符</option>
+            <option value="2000000">全部（可能卡顿）</option>
+          </select>
+        </div>
+        <div class="row"><span>补齐到 N 位小数</span><input type="checkbox" id="setFixed" checked></div>
+        <div class="row"><span>千位分隔符</span><input type="checkbox" id="setGroup"></div>
+        <div class="hint">内部以「显示位数 + 保护位」参与运算，额外保护位用于消除中间舍入误差，最终输出按显示位数四舍五入。</div>
+      </div>
+
+      <div class="card">
+        <h3>历史</h3>
+        <div class="hist" id="hist"><div class="empty">还没有计算记录</div></div>
+      </div>
+
+      <div class="card">
+        <h3>说明</h3>
+        <div class="hint">
+          · 运算符：<code>+ − × ÷ ^ mod</code>，括号与函数任意嵌套<br>
+          · 数字可写 <code>1.5e10000</code>、<code>1,000,000</code>、<code>0.5</code><br>
+          · 结果永不使用 <code>e</code> 记法；超长结果屏幕截断显示，复制/下载为完整值<br>
+          · 快捷键：<kbd>Enter</kbd> 计算 · <kbd>Shift+Enter</kbd> 换行 · <kbd>Esc</kbd> 清空 · <kbd>⌫</kbd> 退格
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="foot">
+    内核：BigInt 定点十进制 + 分治 Karatsuba 乘法 + 递归除法 + 分治进制转换，运算在 Web Worker 中执行，界面不会卡死。
+  </div>
+</div>
+
+<!-- ========================================================================
+     任意精度十进制内核（纯逻辑，同时供主线程与 Worker 使用）
+     ===================================================================== -->
+<script id="calc-core" type="text/plain">
+var CALC = (function () {
+  'use strict';
+
+  var now = (typeof performance !== 'undefined' && performance.now)
+    ? function () { return performance.now(); } : function () { return Date.now(); };
+
+  function CalcError(msg) { this.name = 'CalcError'; this.message = msg; }
+  CalcError.prototype = Object.create(Error.prototype);
+  CalcError.prototype.constructor = CalcError;
+
+  /* ---------------- 10^n 缓存（平方递归） ---------------- */
+  var POW10 = [1n];
+  function pow10(n) {
+    if (n < 0) throw new CalcError('pow10 负数');
+    var v = POW10[n];
+    if (v !== undefined) return v;
+    var h = pow10(n >> 1);
+    var r = (n % 2 === 0) ? h * h : h * h * 10n;
+    POW10[n] = r;
+    return r;
+  }
+
+  /* ---------------- 快速大数 <-> 十进制字符串（分治，避免平方级转换） ---------------- */
+  function bitLen(x) {
+    if (x < 0n) x = -x;
+    if (x === 0n) return 0;
+    var h = x.toString(16);                       // 2^k 进制转换在 V8 中是线性的
+    return (h.length - 1) * 4 + (32 - Math.clz32(parseInt(h[0], 16)));
+  }
+  var STR_LEAF = 1000000000000000n;               // < 1e15 直接走原生
+  function uToStr(x) {
+    if (x < STR_LEAF) return x.toString();
+    var d10 = Math.floor(bitLen(x) * 0.15051499783199);   // 位数的一半 ≈ bitLen*log10(2)/2
+    if (d10 < 1) d10 = 1;
+    var p = pow10(d10);
+    var hi = x / p, lo = x % p;
+    return uToStr(hi) + uToStr(lo).padStart(d10, '0');
+  }
+  function strToBig(s) {                          // 仅数字串
+    if (s.length <= 15) return BigInt(s);
+    var h = s.length >> 1;
+    return strToBig(s.slice(0, h)) * pow10(s.length - h) + strToBig(s.slice(h));
+  }
+  function isqrt(n) {
+    if (n < 0n) throw new CalcError('负数开平方');
+    if (n < 2n) return n;
+    var x = 1n << BigInt(Math.ceil(bitLen(n) / 2));
+    for (;;) { var y = (x + n / x) >> 1n; if (y >= x) break; x = y; }
+    return x;
+  }
+  function biggcd(a, b) { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) { var t = a % b; a = b; b = t; } return a; }
+
+  /* ---------------- 全局精度参数 ---------------- */
+  var P = { frac: 32, guard: 8, maxDigits: 524288 };
+  function maxS() { return P.frac + P.guard; }
+  function maxBits() { return Math.floor(P.maxDigits * 3.322) + 96; }
+  function guard(v, s) {                          // 按“整数部分位数”判定，小数位不占用上限
+    var b = bitLen(v) - (s || 0) * 3.322;
+    if (b > maxBits())
+      throw new CalcError('结果超过 ' + P.maxDigits + ' 位整数上限（可在右侧设置中提高）');
+  }
+
+  /* ---------------- Dec：值 = v / 10^s ---------------- */
+  function Dec(v, s) { this.v = v; this.s = s || 0; }
+
+  Dec.prototype.rescale = function (s) {          // 半进位（远离零）
+    if (s === this.s) return this;
+    if (s > this.s) { var v = this.v * pow10(s - this.s); guard(v, s); return new Dec(v, s); }
+    var k = this.s - s, p = pow10(k);
+    var q = this.v / p, r = this.v % p;
+    if (r < 0n) r = -r;
+    if (r * 2n >= p) q += (this.v < 0n ? -1n : 1n);
+    return new Dec(q, s);
+  };
+  Dec.prototype.add = function (o) {
+    var s = Math.max(this.s, o.s);
+    var v = this.rescale(s).v + o.rescale(s).v; guard(v, s);
+    return new Dec(v, s);
+  };
+  Dec.prototype.neg = function () { return new Dec(-this.v, this.s); };
+  Dec.prototype.sub = function (o) { return this.add(o.neg()); };
+  Dec.prototype.mul = function (o) {
+    var v = this.v * o.v, s = this.s + o.s; guard(v, s);
+    var r = new Dec(v, s);
+    return s > maxS() ? r.rescale(maxS()) : r;
+  };
+  Dec.prototype.div = function (o, flag) {
+    if (o.v === 0n) throw new CalcError('除以零');
+    var s = maxS(), e = o.s + s - this.s;
+    var num = e >= 0 ? this.v * pow10(e) : this.v / pow10(-e);
+    guard(num, this.s + e);
+    var q = num / o.v;
+    if (num - q * o.v !== 0n && flag) flag.inexact = true;
+    return new Dec(q, s);
+  };
+  Dec.prototype.mod = function (o) {
+    if (o.v === 0n) throw new CalcError('模数为零');
+    var s = Math.max(this.s, o.s);
+    return new Dec(this.rescale(s).v % o.rescale(s).v, s);
+  };
+  Dec.prototype.sqrt = function (flag) {
+    if (this.v < 0n) throw new CalcError('负数不能开平方');
+    var s = maxS(), A = this.v * pow10(2 * s - this.s);
+    guard(A, 2 * s);
+    var r = new Dec(isqrt(A), s);
+    if (flag && r.mul(r).rescale(maxS()).v !== this.rescale(maxS()).v) flag.inexact = true;
+    return r;
+  };
+  Dec.prototype.abs = function () { return new Dec(this.v < 0n ? -this.v : this.v, this.s); };
+  Dec.prototype.trunc = function () { return new Dec(this.v / pow10(this.s), 0); };
+  Dec.prototype.floor = function () {
+    if (this.s === 0) return this;
+    var p = pow10(this.s), q = this.v / p;
+    if (this.v < 0n && this.v % p !== 0n) q -= 1n;
+    return new Dec(q, 0);
+  };
+  Dec.prototype.ceil = function () { return this.neg().floor().neg(); };
+  Dec.prototype.round = function () { return this.rescale(0); };
+  Dec.prototype.isInt = function () { return this.rescale(0).v * pow10(this.s) === this.v; };
+  Dec.prototype.isZero = function () { return this.v === 0n; };
+
+  function powi(a, n, flag) {                     // n: BigInt
+    if (n < 0n) { var d = ONE().div(a, flag); return d; }
+    var r = ONE(), b = a;
+    while (n > 0n) {
+      if (n & 1n) r = r.mul(b);
+      n >>= 1n;
+      if (n > 0n) b = b.mul(b);
+    }
+    return r;
+  }
+  function ONE() { return new Dec(1n, 0); }
+  function ZERO() { return new Dec(0n, 0); }
+
+  /* ---------------- 输出：完整十进制，绝不用 e 记法 ---------------- */
+  Dec.prototype.toStr = function (fracDigits, fixed) {
+    var d = this.rescale(fracDigits);
+    var neg = d.v < 0n, a = neg ? -d.v : d.v, s = d.s;
+    var ip, fp = 0n;
+    if (s > 0) { var p = pow10(s); ip = a / p; fp = a % p; } else { ip = a * pow10(-s); }
+    var istr = uToStr(ip);
+    var fstr = s > 0 ? uToStr(fp).padStart(s, '0') : '';
+    if (!fixed) fstr = fstr.replace(/0+$/, '');
+    var out = istr + (fstr ? '.' + fstr : '');
+    return (neg && (ip !== 0n || fp !== 0n)) ? '-' + out : out;
+  };
+
+  /* ---------------- 数字字面量 ---------------- */
+  function parseNum(tok) {
+    var t = tok.replace(/[,_\s']/g, '');
+    var m = /^(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/.exec(t);
+    if (!m || (!m[1] && !m[2])) throw new CalcError('无法解析数字：' + tok);
+    var ip = m[1] || '', fp = m[2] || '', ex = m[3] ? parseInt(m[3], 10) : 0;
+    if (!isFinite(ex)) throw new CalcError('指数过大');
+    var ds = (ip + fp).replace(/^0+/, '');
+    if (ds === '') return ZERO();
+    var v = strToBig(ds); guard(v, Math.max(0, fp.length - ex));
+    var s = fp.length - ex, d;
+    if (s < 0) { d = new Dec(v * pow10(-s), 0); } else { d = new Dec(v, s); }
+    if (d.s > maxS()) d = d.rescale(maxS());
+    return d;
+  }
+
+  /* ---------------- 常量 ---------------- */
+  var PI_STR = '3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679';
+  var E_STR  = '2.7182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274';
+
+  /* ---------------- 词法 ---------------- */
+  function d9(c) { return c >= '0' && c <= '9'; }
+  function tokenize(src) {
+    var toks = [], i = 0, n = src.length;
+    while (i < n) {
+      var c = src[i];
+      if (c === ' ' || c === '\t' || c === '\n' || c === '\r') { i++; continue; }
+      if (c >= '0' && c <= '9' || c === '.') {
+        var j = i;
+        while (j < n) {
+          var ch = src.charCodeAt(j);
+          if ((ch >= 48 && ch <= 57) || ch === 46 || ch === 95 || ch === 39) { j++; continue; }
+          // 逗号仅在严格千位分组（,ddd 后非数字）时视为分隔符，避免吃掉函数参数逗号
+          if (ch === 44 && j + 3 < n && d9(src[j + 1]) && d9(src[j + 2]) && d9(src[j + 3]) && !d9(src[j + 4])) { j += 4; continue; }
+          break;
+        }
+        if (j < n && (src[j] === 'e' || src[j] === 'E')) {
+          var k = j + 1;
+          if (k < n && (src[k] === '+' || src[k] === '-')) k++;
+          var k2 = k;
+          while (k2 < n && src[k2] >= '0' && src[k2] <= '9') k2++;
+          if (k2 > k) j = k2;
+        }
+        toks.push({ t: 'num', v: src.slice(i, j) }); i = j; continue;
+      }
+      if (/[a-zA-Zπ]/.test(c)) {
+        var j2 = i;
+        while (j2 < n && /[a-zA-Z0-9_π]/.test(src[j2])) j2++;
+        toks.push({ t: 'name', v: src.slice(i, j2) }); i = j2; continue;
+      }
+      var map = { '+': '+', '-': '-', '*': '*', '×': '*', '/': '/', '÷': '/', '⁄': '/',
+                  '^': '^', '%': '%', '(': '(', ')': ')', ',': ',' };
+      if (map[c]) { toks.push({ t: map[c] }); i++; continue; }
+      throw new CalcError('无法识别的字符：' + c);
+    }
+    return toks;
+  }
+
+  /* ---------------- 语法（递归下降） ----------------
+     expr := term (('+'|'-') term)*
+     term := unary (('*'|'/'|'%') unary)*
+     unary:= ('-'|'+') unary | power
+     power:= atom ('^' unary)?        （右结合）
+     atom := num | '(' expr ')' | name '(' args ')' | 常量
+  --------------------------------------------------- */
+  function Parser(toks) { this.t = toks; this.i = 0; this.flag = { inexact: false }; }
+  Parser.prototype.peek = function () { return this.t[this.i]; };
+  Parser.prototype.eat = function (k) {
+    var t = this.t[this.i];
+    if (!t || t.t !== k) throw new CalcError('缺少 ' + (k === ')' ? '右括号' : k));
+    this.i++;
+  };
+  Parser.prototype.parseExpr = function () {
+    var v = this.parseTerm();
+    for (;;) {
+      var t = this.peek();
+      if (!t || (t.t !== '+' && t.t !== '-')) break;
+      this.i++;
+      v = t.t === '+' ? v.add(this.parseTerm()) : v.sub(this.parseTerm());
+    }
+    return v;
+  };
+  Parser.prototype.parseTerm = function () {
+    var v = this.parseUnary();
+    for (;;) {
+      var t = this.peek();
+      if (t && t.t === 'name' && t.v.toLowerCase() === 'mod') {   // 中缀 mod
+        this.i++; v = v.mod(this.parseUnary()); continue;
+      }
+      if (!t || (t.t !== '*' && t.t !== '/' && t.t !== '%')) break;
+      this.i++;
+      var r = this.parseUnary();
+      if (t.t === '*') v = v.mul(r);
+      else if (t.t === '/') v = v.div(r, this.flag);
+      else v = v.mod(r);
+    }
+    return v;
+  };
+  Parser.prototype.parseUnary = function () {
+    var t = this.peek();
+    if (t && t.t === '-') { this.i++; return this.parseUnary().neg(); }
+    if (t && t.t === '+') { this.i++; return this.parseUnary(); }
+    return this.parsePower();
+  };
+  Parser.prototype.parsePower = function () {
+    var b = this.parseAtom();
+    var t = this.peek();
+    if (t && t.t === '^') {
+      this.i++;
+      var e = this.parseUnary();
+      var eb = toInt(e, '幂运算');
+      if (eb > 0n) {
+        var estBits = eb * BigInt(Math.max(1, bitLen(b.v)));
+        if (estBits > BigInt(maxBits() * 2))
+          throw new CalcError('幂运算结果将超过 ' + P.maxDigits + ' 位上限');
+      }
+      if (eb < 0n && eb < -100000n) throw new CalcError('负指数过小');
+      if (b.isZero() && eb < 0n) throw new CalcError('零的负次幂无意义');
+      return powi(b, eb, this.flag);
+    }
+    return b;
+  };
+  Parser.prototype.parseAtom = function () {
+    var t = this.peek();
+    if (!t) throw new CalcError('表达式不完整');
+    if (t.t === 'num') { this.i++; return parseNum(t.v); }
+    if (t.t === '(') { this.i++; var v = this.parseExpr(); this.eat(')'); return v; }
+    if (t.t === '-' || t.t === '+') return this.parseUnary();
+    if (t.t === 'name') {
+      var nm = t.v.toLowerCase();
+      var nx = this.t[this.i + 1];
+      if (nx && nx.t === '(') {
+        this.i += 2;
+        var args = [];
+        if (this.peek() && this.peek().t !== ')') {
+          for (;;) {
+            args.push(this.parseExpr());
+            if (this.peek() && this.peek().t === ',') { this.i++; continue; }
+            break;
+          }
+        }
+        this.eat(')');
+        return callFunc(nm, args, this.flag);
+      }
+      this.i++;
+      if (nm === 'pi' || nm === 'π') return parseNum(PI_STR);
+      if (nm === 'e') return parseNum(E_STR);
+      throw new CalcError('未知名称：' + t.v);
+    }
+    throw new CalcError('意外的符号：' + (t.v || t.t));
+  };
+
+  function need(args, n, name) {
+    if (args.length !== n) throw new CalcError(name + ' 需要 ' + n + ' 个参数');
+  }
+  function toInt(d, name) {
+    var r = d.round();                              // scale = 0
+    if (r.v * pow10(d.s) !== d.v) throw new CalcError(name + ' 需要整数参数');
+    return r.v;
+  }
+  function callFunc(nm, a, flag) {
+    switch (nm) {
+      case 'sqrt': need(a, 1, 'sqrt'); return a[0].sqrt(flag);
+      case 'abs': need(a, 1, 'abs'); return a[0].abs();
+      case 'neg': need(a, 1, 'neg'); return a[0].neg();
+      case 'floor': need(a, 1, 'floor'); return a[0].floor();
+      case 'ceil': need(a, 1, 'ceil'); return a[0].ceil();
+      case 'round': need(a, 1, 'round'); return a[0].round();
+      case 'trunc': need(a, 1, 'trunc'); return a[0].trunc();
+      case 'frac': need(a, 1, 'frac'); return a[0].sub(a[0].trunc());
+      case 'inv': need(a, 1, 'inv'); return ONE().div(a[0], flag);
+      case 'pow': need(a, 2, 'pow');
+        var e = toInt(a[1], 'pow');
+        if (a[0].isZero() && e < 0n) throw new CalcError('零的负次幂无意义');
+        return powi(a[0], e, flag);
+      case 'mod': need(a, 2, 'mod'); return a[0].mod(a[1]);
+      case 'gcd': case 'lcm': {
+        need(a, 2, nm);
+        var s = Math.max(a[0].s, a[1].s);
+        var x = a[0].rescale(s).v, y = a[1].rescale(s).v;
+        if (x < 0n) x = -x; if (y < 0n) y = -y;
+        var g = biggcd(x, y);
+        if (nm === 'gcd') return new Dec(g, s);
+        if (g === 0n) return ZERO();
+        return new Dec(x / g * y, s * 2).rescale(Math.min(s * 2, maxS()));
+      }
+      case 'min': case 'max': {
+        if (a.length < 1) throw new CalcError(nm + ' 至少 1 个参数');
+        var r = a[0];
+        for (var i = 1; i < a.length; i++) {
+          var cmp = a[i].sub(r).v;
+          if (nm === 'min' ? cmp < 0n : cmp > 0n) r = a[i];
+        }
+        return r;
+      }
+      case 'fact': {
+        need(a, 1, 'fact');
+        var n = toInt(a[0], 'fact');
+        if (n < 0n) throw new CalcError('阶乘不接受负数');
+        if (n > 50000n) throw new CalcError('阶乘参数过大（上限 50000）');
+        var acc = ONE();
+        for (var k = 2n; k <= n; k++) acc = acc.mul(new Dec(k, 0));
+        return acc;
+      }
+      default: throw new CalcError('未知函数：' + nm);
+    }
+  }
+
+  /* ---------------- 入口 ---------------- */
+  function run(src, opts) {
+    var t0 = now();
+    P.frac = Math.max(0, opts.frac | 0);
+    P.guard = Math.max(0, opts.guard | 0);
+    P.maxDigits = Math.max(16, opts.maxDigits | 0);
+
+    var toks = tokenize(src);
+    if (!toks.length) throw new CalcError('请输入表达式');
+    var p = new Parser(toks);
+    var val = p.parseExpr();
+    if (p.i !== toks.length) throw new CalcError('表达式多余内容');
+
+    var fn = Math.max(0, P.frac);
+    var dv = val.rescale(fn);
+    var str = dv.toStr(fn, !!opts.fixed);
+    var dot = str.indexOf('.');
+    var neg = str.charAt(0) === '-' ? 1 : 0;
+    var intLen = (dot < 0 ? str.length : dot) - neg;
+    return {
+      str: str,
+      exact: !p.flag.inexact,
+      ms: now() - t0,
+      intDigits: intLen,
+      fracDigits: dot < 0 ? 0 : str.length - dot - 1,
+      chars: str.length
+    };
+  }
+
+  function selfTest(opts) {
+    P.frac = Math.max(0, opts.frac | 0);
+    P.guard = Math.max(0, opts.guard | 0);
+    P.maxDigits = Math.max(16, opts.maxDigits | 0);
+    var out = [], t0 = now();
+    // 1) 小数精度
+    var SO = { frac: 32, guard: 8, fixed: true, maxDigits: P.maxDigits };
+    out.push('0.1 + 0.2 = ' + run('0.1+0.2', SO).str);
+    // 2) 32 位除法
+    out.push('1 / 3      = ' + run('1/3', SO).str);
+    // 3) sqrt(2)
+    out.push('sqrt(2)    = ' + run('sqrt(2)', SO).str);
+    // 4) 大整数位数：2^1740743 ≈ 524000 位
+    var t1 = now();
+    var big = powi(new Dec(2n, 0), 1740743n);
+    var s = uToStr(big.v);
+    out.push('2^1740743  位数 = ' + s.length + '（计算+转换 ' + Math.round(now() - t1) + ' ms）');
+    out.push('  末 30 位 = ' + s.slice(-30));
+    // 5) 大数乘除一致性
+    var t2 = now();
+    var r5 = run('(10^262144+1)*(10^262144-1)', { frac: 0, guard: 0, fixed: false, maxDigits: 1048576 });
+    out.push('(10^262144+1)(10^262144-1) = 10^524288-1 位数 = ' + r5.intDigits + '（应 524288，' + Math.round(now() - t2) + ' ms）');
+    out.push('总耗时 ' + Math.round(now() - t0) + ' ms');
+    return out.join('\n');
+  }
+
+  return { run: run, selfTest: selfTest, Dec: Dec, pow10: pow10, uToStr: uToStr, strToBig: strToBig, bitLen: bitLen };
+})();
+</script>
+
+<!-- ========================================================================
+     UI 层
+     ===================================================================== -->
+<script>
+(function () {
+  'use strict';
+  var CORE_SRC = document.getElementById('calc-core').textContent;
+  (0, eval)(CORE_SRC);                      // 主线程也持有一份内核（Worker 不可用时回退）
+
+  var $ = function (id) { return document.getElementById(id); };
+  var exprEl = $('expr'), outEl = $('out');
+  var lastFull = '', busy = false, worker = null, jobId = 0, pending = null, mem = null;
+  var history = [];
+
+  /* ---------- Worker ---------- */
+  function spawn() {
+    try {
+      var glue = 'self.onmessage=function(e){var d=e.data;try{var r=' +
+        '(d.mode==="test"?CALC.selfTest(d.opts):CALC.run(d.src,d.opts));' +
+        'self.postMessage({id:d.id,ok:true,res:r});}catch(err){self.postMessage({id:d.id,ok:false,err:(err&&err.message)||String(err)});}};';
+      var blob = new Blob([CORE_SRC + '\n' + glue], { type: 'text/javascript' });
+      var url = URL.createObjectURL(blob);
+      var w = new Worker(url);
+      w.onmessage = onWorkerMsg;
+      w.onerror = function () { var had = pending; fallback(); if (had) runLocal(); };
+      return w;
+    } catch (e) { return null; }
+  }
+  function fallback() {
+    if (worker) { try { worker.terminate(); } catch (e) {} }
+    worker = null;
+    $('badgeMode').textContent = '主线程模式';
+  }
+  worker = spawn();
+  if (!worker) $('badgeMode').textContent = '主线程模式';
+
+  function onWorkerMsg(ev) {
+    var d = ev.data;
+    if (!pending || d.id !== pending.id) return;
+    var cb = pending.cb; pending = null;
+    done();
+    cb(d);
+  }
+
+  function setBusy() {
+    busy = true;
+    $('btnAbort').disabled = false;
+    $('stState').textContent = '计算中…';
+    outEl.classList.add('busy');
+    outEl.classList.remove('err');
+    outEl.value = '计算中…（超长运算可能需要数秒）';
+  }
+  function submit(payload, cb) {
+    payload.id = ++jobId;
+    pending = { id: payload.id, cb: cb, payload: payload };
+    setBusy();
+    if (worker) { try { worker.postMessage(payload); return; } catch (e) { fallback(); } }
+    runLocal();
+  }
+  function runLocal() {
+    var p = pending; if (!p) return;
+    setTimeout(function () {
+      var res;
+      try {
+        res = {
+          id: p.id, ok: true,
+          res: p.payload.mode === 'test' ? CALC.selfTest(p.payload.opts) : CALC.run(p.payload.src, p.payload.opts)
+        };
+      } catch (err) { res = { id: p.id, ok: false, err: (err && err.message) || String(err) }; }
+      onWorkerMsg({ data: res });
+    }, 20);
+  }
+  function done() { busy = false; $('btnAbort').disabled = true; outEl.classList.remove('busy'); }
+  $('btnAbort').onclick = function () {
+    if (!busy) return;
+    pending = null;
+    if (worker) { try { worker.terminate(); } catch (e) {} worker = spawn(); }
+    done();
+    $('stState').textContent = '已中止';
+    outEl.value = '（已中止）';
+  };
+
+  /* ---------- 设置 ---------- */
+  function opts() {
+    return {
+      frac: parseInt($('setFrac').value, 10) || 0,
+      guard: parseInt($('setGuard').value, 10) || 0,
+      maxDigits: parseInt($('setMaxDigits').value, 10) || 524288,
+      fixed: $('setFixed').checked
+    };
+  }
+  $('setViewMax').addEventListener('change', function () { renderView(); });
+  $('setGroup').addEventListener('change', function () { renderView(); });
+  ['setFrac', 'setMaxDigits'].forEach(function (id) {
+    $(id).addEventListener('change', function () {
+      $('badgeFrac').textContent = $('setFrac').value;
+      $('badgeDigits').textContent = Number($('setMaxDigits').value).toLocaleString('en-US');
+    });
+  });
+  $('badgeDigits').textContent = Number($('setMaxDigits').value).toLocaleString('en-US');
+
+  /* ---------- 显示 ---------- */
+  function groupInt(str) {                       // 仅给整数部分加千位分隔
+    var neg = str.charAt(0) === '-';
+    var body = neg ? str.slice(1) : str;
+    var dot = body.indexOf('.');
+    var ip = dot < 0 ? body : body.slice(0, dot);
+    var rest = dot < 0 ? '' : body.slice(dot);
+    return (neg ? '-' : '') + ip.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + rest;
+  }
+  function renderView(label) {
+    if (!lastFull) return;
+    var viewMax = parseInt($('setViewMax').value, 10) || 50000;
+    var shown = lastFull.length > viewMax ? lastFull.slice(0, viewMax) : lastFull;
+    if ($('setGroup').checked) shown = groupInt(shown);
+    outEl.classList.remove('err');
+    outEl.value = shown;
+    if (label) $('stState').textContent = label;
+    $('stChars').textContent = lastFull.length.toLocaleString('en-US');
+    if (lastFull.length > viewMax) { $('stTruncWrap').style.display = ''; $('stTrunc').textContent = viewMax.toLocaleString('en-US'); }
+    else $('stTruncWrap').style.display = 'none';
+  }
+  function showResult(res, label) {
+    lastFull = res.str;
+    var viewMax = parseInt($('setViewMax').value, 10) || 50000;
+    var shown = res.str.length > viewMax ? res.str.slice(0, viewMax) : res.str;
+    if ($('setGroup').checked) shown = groupInt(shown);
+    outEl.classList.remove('err');
+    outEl.value = shown;
+    $('stState').textContent = label || '完成';
+    $('stInt').textContent = res.intDigits.toLocaleString('en-US');
+    $('stFrac').textContent = res.fracDigits.toLocaleString('en-US');
+    $('stChars').textContent = res.chars.toLocaleString('en-US');
+    $('stMs').textContent = (res.ms < 1 ? res.ms.toFixed(2) : Math.round(res.ms));
+    $('stExact').textContent = res.exact ? '精确' : '已舍入到 N 位';
+    $('stExactWrap').className = 'chip ' + (res.exact ? 'ok' : 'warn');
+    if (res.str.length > viewMax) {
+      $('stTruncWrap').style.display = '';
+      $('stTrunc').textContent = viewMax.toLocaleString('en-US');
+    } else $('stTruncWrap').style.display = 'none';
+  }
+  function showError(msg) {
+    lastFull = '';
+    outEl.classList.add('err');
+    outEl.classList.remove('busy');
+    outEl.value = '错误：' + msg;
+    $('stState').textContent = '错误';
+  }
+
+  /* ---------- 计算 ---------- */
+  function calc(src) {
+    src = (src || exprEl.value).trim();
+    if (!src) { outEl.value = ''; return; }
+    var o = opts();
+    submit({ mode: 'eval', src: src, opts: o }, function (d) {
+      if (!d.ok) { showError(d.err); return; }
+      showResult(d.res, '完成');
+      pushHist(src, d.res);
+    });
+  }
+  function pushHist(src, res) {
+    history.unshift({ e: src, s: res.str });
+    if (history.length > 40) history.length = 40;
+    renderHist();
+  }
+  function renderHist() {
+    var box = $('hist');
+    if (!history.length) { box.innerHTML = '<div class="empty">还没有计算记录</div>'; return; }
+    box.innerHTML = '';
+    history.forEach(function (h) {
+      var el = document.createElement('div');
+      el.className = 'hist-item';
+      var e = document.createElement('div'); e.className = 'e'; e.textContent = h.e.length > 120 ? h.e.slice(0, 120) + '…' : h.e;
+      var r = document.createElement('div'); r.className = 'r'; r.textContent = '= ' + (h.s.length > 60 ? h.s.slice(0, 60) + ' …' : h.s);
+      el.appendChild(e); el.appendChild(r);
+      el.onclick = function () { exprEl.value = h.e; exprEl.focus(); };
+      box.appendChild(el);
+    });
+  }
+  $('btnClearHist').onclick = function () { history = []; renderHist(); };
+
+  /* ---------- 插入 / 按键 ---------- */
+  function insert(txt) {
+    var s = exprEl.selectionStart, e = exprEl.selectionEnd;
+    var v = exprEl.value;
+    exprEl.value = v.slice(0, s) + txt + v.slice(e);
+    var pos = s + txt.length;
+    exprEl.setSelectionRange(pos, pos);
+    exprEl.focus();
+  }
+  function backspace() {
+    var s = exprEl.selectionStart, e = exprEl.selectionEnd, v = exprEl.value;
+    if (s === e) { if (s === 0) return; exprEl.value = v.slice(0, s - 1) + v.slice(s); exprEl.setSelectionRange(s - 1, s - 1); }
+    else { exprEl.value = v.slice(0, s) + v.slice(e); exprEl.setSelectionRange(s, s); }
+    exprEl.focus();
+  }
+  function applyKey(k) {
+    if (k === 'C') { exprEl.value = ''; outEl.value = ''; lastFull = ''; $('stState').textContent = '就绪'; exprEl.focus(); return; }
+    if (k === 'BK') { backspace(); return; }
+    if (k === '=') { calc(); return; }
+    if (k === 'NEG') {                             // ±：翻转当前结果/表达式符号
+      if (lastFull) {
+        lastFull = lastFull.charAt(0) === '-' ? lastFull.slice(1) : '-' + lastFull;
+        renderView('已翻转符号');
+        return;
+      }
+      var v = exprEl.value;
+      exprEl.value = v.charAt(0) === '-' ? v.slice(1) : '-' + v;
+      exprEl.focus();
+      return;
+    }
+    if (k === 'INV') { wrapOrInsert('1/('); return; }
+    if (k === 'SQRT') { wrapOrInsert('sqrt('); return; }
+    if (k === 'MC') { mem = null; $('stState').textContent = '记忆已清空'; return; }
+    if (k === 'MS') { if (lastFull) { mem = lastFull; $('stState').textContent = '已存入记忆'; } return; }
+    if (k === 'MR') { if (mem) insert(mem); return; }
+    if (k === 'M+' || k === 'M-') {
+      if (!lastFull) return;
+      var src = (mem ? '(' + mem + ')' : '0') + (k === 'M+' ? '+' : '-') + '(' + lastFull + ')';
+      submit({ mode: 'eval', src: src, opts: opts() }, function (d) {
+        if (!d.ok) { showError(d.err); return; }
+        mem = d.res.str; showResult(d.res, '已累加到记忆');
+      });
+      return;
+    }
+  }
+  var UNARY = { 'sqrt(': 1, 'abs(': 1, 'floor(': 1, 'ceil(': 1, 'round(': 1, 'trunc(': 1, '1/(': 1 };
+  function wrapOrInsert(fn) {
+    var v = exprEl.value.trim();
+    if (v && !/[(+−*\/^%,]$/.test(v)) { exprEl.value = fn + v + ')'; var e2 = exprEl.value.length; exprEl.setSelectionRange(e2, e2); }
+    else insert(fn);
+    exprEl.focus();
+  }
+  document.querySelectorAll('.key').forEach(function (b) {
+    b.onclick = function () {
+      if (b.dataset.key) applyKey(b.dataset.key);
+      else if (b.dataset.ins === 'sqrt(') wrapOrInsert('sqrt(');
+      else if (b.dataset.ins === '1/(') wrapOrInsert('1/(');
+      else insert(b.dataset.ins);
+    };
+  });
+  document.querySelectorAll('#fnChips .chip-btn').forEach(function (b) {
+    b.onclick = function () {
+      var t = b.dataset.ins;
+      if (UNARY[t]) wrapOrInsert(t);
+      else if (t === 'mod(' || t === 'pow(' || t === 'gcd(' || t === 'lcm(') {
+        var v = exprEl.value;
+        insert((v && !/[\s(+−*\/^%,]$/.test(v) ? ' ' : '') + t);
+      }
+      else if (t === 'fact(') wrapOrInsert(t);
+      else insert(t);
+    };
+  });
+
+  /* ---------- 键盘 ---------- */
+  exprEl.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); calc(); }
+    else if (ev.key === 'Escape') { exprEl.value = ''; outEl.value = ''; }
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.target === exprEl || ev.target.tagName === 'INPUT' || ev.target.tagName === 'SELECT' || ev.target.tagName === 'TEXTAREA') return;
+    var k = ev.key;
+    if (/^[0-9.]$/.test(k)) insert(k);
+    else if ('+-*/^%()'.indexOf(k) >= 0) insert(k);
+    else if (k === 'Enter') { ev.preventDefault(); calc(); }
+    else if (k === 'Backspace') { ev.preventDefault(); backspace(); }
+    else if (k === 'Escape') { exprEl.value = ''; outEl.value = ''; }
+    exprEl.focus();
+  });
+
+  /* ---------- 复制 / 下载 / 自检 ---------- */
+  $('btnCalc').onclick = function () { calc(); };
+  $('btnCopy').onclick = function () {
+    if (!lastFull) { $('stState').textContent = '无结果可复制'; return; }
+    var ta = document.createElement('textarea');
+    ta.value = lastFull; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); $('stState').textContent = '已复制 ' + lastFull.length.toLocaleString('en-US') + ' 字符'; }
+    catch (e) {
+      if (navigator.clipboard) navigator.clipboard.writeText(lastFull).then(function () { $('stState').textContent = '已复制'; });
+      else $('stState').textContent = '复制失败，请手动选中';
+    }
+    document.body.removeChild(ta);
+  };
+  $('btnSave').onclick = function () {
+    if (!lastFull) return;
+    var blob = new Blob([lastFull], { type: 'text/plain;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'result_' + lastFull.length + 'chars.txt';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  };
+  $('btnSelf').onclick = function () {
+    submit({ mode: 'test', opts: opts() }, function (d) {
+      if (!d.ok) { showError(d.err); return; }
+      outEl.classList.remove('err');
+      outEl.value = d.res;
+      $('stState').textContent = '自检完成';
+    });
+  };
+
+  exprEl.focus();
+})();
+</script>
+</body>
+</html>
