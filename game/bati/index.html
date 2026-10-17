@@ -1,0 +1,704 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>电池增量0.3.0</title><style>*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;background:radial-gradient(circle at 50% -10%,#16212e 0%,#070a0f 55%,#04060a 100%) fixed;color:#d8e2ef;min-height:100vh;padding:16px 12px 80px;-webkit-tap-highlight-color:transparent;overflow-x:hidden}#app{max-width:680px;margin:0 auto}h1{font-size:22px;letter-spacing:4px;text-align:center;margin-bottom:4px;color:#6fe3a8;text-shadow:0 0 24px rgba(111,227,168,.45);font-weight:600}.subtitle{text-align:center;font-size:11px;color:#4d5c6e;letter-spacing:2px;margin-bottom:14px}.tabs{display:flex;gap:5px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}.tab{flex:1;min-width:0;padding:8px 4px;text-align:center;cursor:pointer;background:linear-gradient(180deg,#111922,#0c1219);border:1px solid #1b2532;border-radius:8px;font-size:11px;color:#5c6b7e;transition:.15s;user-select:none;white-space:nowrap}.tab.active{border-color:#2f9a72;color:#7fe3b0;background:linear-gradient(180deg,#11201c,#0c1614)}.tab:hover:not(.active){color:#8fa8c0;border-color:#2a3a4d}.tab-panel{display:none}.tab-panel.active{display:block}.stats{display:grid;grid-template-columns:1.4fr 1.4fr 1fr;gap:8px;margin-bottom:12px}.stat{background:linear-gradient(180deg,#121a25,#0d141c);border:1px solid #1c2735;border-radius:10px;padding:10px 12px;overflow:hidden}.stat .label{font-size:10px;color:#5c6b7e;letter-spacing:1.5px;margin-bottom:2px}.stat .value{font-size:17px;font-weight:600;color:#e6f0fa;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#charge{color:#7fe3b0}#cps{color:#6fc5e8}#cores{color:#e0c05e}#b555{color:#ff88cc}#singCores{color:#b070ff}#manual{width:100%;padding:15px;margin-bottom:8px;font-size:15px;font-weight:700;font-family:inherit;letter-spacing:2px;color:#04121a;background:linear-gradient(135deg,#55e0a8,#38b8dc);border:0;border-radius:12px;cursor:pointer;transition:transform .08s ease,filter .15s ease,box-shadow .2s;box-shadow:0 6px 22px -8px rgba(85,224,168,.8);touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;position:relative}#manual:hover{filter:brightness(1.08)}#manual:active,#manual.holding{transform:scale(.985);filter:brightness(1.18);box-shadow:0 0 0 3px rgba(85,224,168,.28),0 6px 22px -8px rgba(85,224,168,.9)}.click-info{text-align:center;font-size:11px;color:#56657a;margin-bottom:18px;letter-spacing:1px}.panel{margin-bottom:18px}.panel>h2{font-size:12px;color:#5c6b7e;letter-spacing:3px;margin-bottom:8px;font-weight:500;display:flex;align-items:center;gap:8px}.panel>h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#1e2a38,transparent)}.tier{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#111922,#0c1219);border:1px solid #1b2532;border-radius:10px;padding:9px 11px;margin-bottom:6px;transition:border-color .25s,opacity .25s,background .25s}.tier.affordable{border-color:#2b5f47;background:linear-gradient(180deg,#11201c,#0c1614)}.tier.locked{opacity:.42}.tier-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:rgba(255,255,255,.04);border:1px solid var(--c);color:var(--c);text-shadow:0 0 10px var(--c)}.tier-info{flex:1;min-width:0}.tier-name{font-size:13.5px;font-weight:600;color:#cfdcea;margin-bottom:2px}.tier-sub{font-size:10.5px;color:#5c6b7e;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tier-sub b{color:#8fa8c0;font-weight:600}.tier-sub .out{color:#5ec8e0}.tier-sub .boost{color:#e0a85e}.tier-btns{display:flex;gap:5px;flex-shrink:0}.buy-btn{font-family:inherit;font-size:10.5px;padding:7px 9px;border-radius:7px;border:1px solid #253242;background:#151f2b;color:#6b7a8d;cursor:pointer;white-space:nowrap;transition:.15s;font-variant-numeric:tabular-nums;line-height:1.2}.buy-btn:not(:disabled){background:#14453a;border-color:#2f9a72;color:#7fe3b0}.buy-btn:not(:disabled):hover{background:#1b5c4c}.buy-btn:not(:disabled):active{transform:scale(.95)}.buy-btn:disabled{opacity:.35;cursor:default}.upgrade{display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#111922,#0c1219);border:1px solid #1b2532;border-radius:10px;padding:10px 11px;margin-bottom:6px;transition:border-color .25s,opacity .25s}.upgrade.affordable{border-color:#3a5a8a}.upgrade.maxed{border-color:#6a5a2a;opacity:.75}.upgrade.special{border-color:#5a3a8a;background:linear-gradient(180deg,#1a1228,#120c1e)}.upgrade.special.affordable{border-color:#b070ff;background:linear-gradient(180deg,#241838,#1a1228)}.upgrade.singular{border-color:#2a5a8a;background:linear-gradient(180deg,#0f1a2a,#0a1220)}.upgrade.singular.affordable{border-color:#4ab0ff;background:linear-gradient(180deg,#152440,#0f1a2e)}.up-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;background:rgba(255,255,255,.04);border:1px solid #2a3a4d;flex-shrink:0}.up-info{flex:1;min-width:0}.up-name{font-size:13px;font-weight:600;color:#cfdcea;margin-bottom:2px;display:flex;align-items:center;gap:6px}.up-lvl{font-size:10px;color:#6fc5e8;background:rgba(111,197,232,.12);border-radius:4px;padding:1px 5px;font-weight:500}.up-desc{font-size:10.5px;color:#5c6b7e}.up-btns{display:flex;gap:5px;flex-shrink:0}.up-btn{font-family:inherit;font-size:10.5px;padding:8px 10px;border-radius:7px;border:1px solid #253242;background:#151f2b;color:#6b7a8d;cursor:pointer;white-space:nowrap;transition:.15s;font-variant-numeric:tabular-nums;flex-shrink:0}.up-btn:not(:disabled){background:#16304d;border-color:#3a7ac8;color:#7fb8f0}.up-btn:not(:disabled):hover{background:#1d3f66}.up-btn:not(:disabled):active{transform:scale(.95)}.up-btn:disabled{opacity:.35;cursor:default}.up-btn.purple:not(:disabled){background:#3a1458;border-color:#b070ff;color:#e0a8ff}.up-btn.purple:not(:disabled):hover{background:#4a1e70}.up-btn.singular:not(:disabled){background:#0a2540;border-color:#4ab0ff;color:#7fd0ff}.up-btn.singular:not(:disabled):hover{background:#0f3050}.forge{background:linear-gradient(180deg,#1a1508,#100d06);border:1px solid #3d3218;border-radius:12px;padding:14px}.forge.boom{background:linear-gradient(180deg,#2a0810,#180408);border-color:#5a1830}.forge.singular{background:linear-gradient(180deg,#0a1424,#050c18);border-color:#2a4a7a}.forge.sp{background:linear-gradient(180deg,#1a1228,#120c1e);border-color:#5a3a8a}.forge-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}.forge-title{font-size:14px;font-weight:700;color:#e0c05e;letter-spacing:1px}.forge.boom .forge-title{color:#ff5588}.forge.singular .forge-title{color:#4ab0ff}.forge.sp .forge-title{color:#c0a0e0}.forge-gain{font-size:12px;color:#b09a52;font-variant-numeric:tabular-nums}.forge.boom .forge-gain{color:#ff88aa}.forge.singular .forge-gain{color:#7fd0ff}.forge.sp .forge-gain{color:#c0a0e0}.forge-desc{font-size:11px;color:#7a6a42;line-height:1.6;margin-bottom:10px}.forge.boom .forge-desc{color:#c08898}.forge.singular .forge-desc{color:#6a8ab8}.forge.sp .forge-desc{color:#9a8ab8}.forge-desc b{color:#d8b85e}.forge.boom .forge-desc b{color:#ff88aa}.forge.singular .forge-desc b{color:#7fd0ff}.forge.sp .forge-desc b{color:#c0a0e0}#forgeBtn,#spBtn{width:100%;padding:11px;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:2px;border-radius:9px;border:1px solid #4a3c18;background:#221a08;color:#8a7742;cursor:not-allowed;transition:.2s}#forgeBtn:not(:disabled){background:linear-gradient(135deg,#e0b84e,#c8902e);border-color:#f0d070;color:#201603;cursor:pointer;box-shadow:0 6px 22px -8px rgba(224,184,78,.9)}#forgeBtn:not(:disabled):hover{filter:brightness(1.1)}#forgeBtn:not(:disabled):active{transform:scale(.985)}#spBtn:not(:disabled){background:linear-gradient(135deg,#b070ff,#7a3ad8);border-color:#e0a8ff;color:#fff;cursor:pointer;box-shadow:0 6px 22px -8px rgba(176,112,255,.9)}#spBtn:not(:disabled):hover{filter:brightness(1.15)}#spBtn:not(:disabled):active{transform:scale(.985)}#boomBtn{width:100%;padding:11px;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:2px;border-radius:9px;border:1px solid #5a1830;background:#2a0810;color:#8a5060;cursor:not-allowed;transition:.2s}#boomBtn:not(:disabled){background:linear-gradient(135deg,#ff3366,#cc0055);border-color:#ff88aa;color:#fff;cursor:pointer;box-shadow:0 6px 22px -8px rgba(255,51,102,.9)}#boomBtn:not(:disabled):hover{filter:brightness(1.15)}#boomBtn:not(:disabled):active{transform:scale(.985)}#singBtn{width:100%;padding:11px;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:2px;border-radius:9px;border:1px solid #2a4a7a;background:#0a1424;color:#4a6a9a;cursor:not-allowed;transition:.2s}#singBtn:not(:disabled){background:linear-gradient(135deg,#2a7ac8,#1a4a90);border-color:#7fd0ff;color:#fff;cursor:pointer;box-shadow:0 6px 22px -8px rgba(74,176,255,.9)}#singBtn:not(:disabled):hover{filter:brightness(1.15)}#singBtn:not(:disabled):active{transform:scale(.985)}.footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px;font-size:10.5px;color:#3d4a5a;gap:8px;flex-wrap:wrap}.footer-btns{display:flex;gap:6px}.footer button{font-family:inherit;font-size:10.5px;background:none;border:1px solid #223040;color:#55647a;padding:6px 10px;border-radius:6px;cursor:pointer;transition:.15s}.footer button:hover{border-color:#3a5a8a;color:#8fa8c0}.auto-row{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,#111922,#0c1219);border:1px solid #1b2532;border-radius:10px;padding:10px 12px;margin-bottom:6px}.auto-row.purple{border-color:#4a2a6a;background:linear-gradient(180deg,#1a1228,#120c1e)}.auto-row.blue{border-color:#1a3a6a;background:linear-gradient(180deg,#0f1a2c,#0a1220)}.auto-row span{font-size:12.5px;color:#a8b8c8}.auto-row.purple span{color:#c0a0e0}.auto-row.blue span{color:#7fb8e0}.switch{width:42px;height:22px;border-radius:11px;background:#1e2a38;border:1px solid #2a3a4d;position:relative;cursor:pointer;transition:.2s;flex-shrink:0}.switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#5c6b7e;transition:.2s}.switch.on{background:#14453a;border-color:#2f9a72}.switch.on::after{left:22px;background:#7fe3b0}.switch.purple.on{background:#4a1e70;border-color:#b070ff}.switch.purple.on::after{background:#e0a8ff}.switch.blue.on{background:#0a2540;border-color:#4ab0ff}.switch.blue.on::after{background:#7fd0ff}.ap-config{background:linear-gradient(180deg,#111922,#0c1219);border:1px solid #1b2532;border-radius:10px;padding:11px 12px}.ap-line{display:flex;align-items:center;gap:8px;font-size:12px;color:#a8b8c8;margin-bottom:9px;flex-wrap:wrap}.ap-line:last-child{margin-bottom:0}.ap-line .hint{font-size:10.5px;color:#5c6b7e}.ap-input{font-family:inherit;font-size:12px;width:110px;padding:6px 8px;border-radius:6px;border:1px solid #2a3a4d;background:#0a1018;color:#7fe3b0;font-variant-numeric:tabular-nums}.ap-input:focus{outline:none;border-color:#b070ff;box-shadow:0 0 0 2px rgba(176,112,255,.18)}#toasts{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;z-index:100;width:max-content;max-width:90vw}.toast{background:rgba(28,44,58,.96);border:1px solid #2f7a5f;color:#7fe3b0;padding:10px 18px;border-radius:8px;font-size:12.5px;animation:toastIn .3s cubic-bezier(.2,.9,.3,1.3);backdrop-filter:blur(6px);text-align:center;max-width:90vw}.toast.pink{border-color:#ff5588;color:#ff88aa}.toast.blue{border-color:#4ab0ff;color:#7fd0ff}@keyframes toastIn{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}.float-num{position:fixed;pointer-events:none;font-size:15px;font-weight:700;color:#7fe3b0;text-shadow:0 0 12px rgba(127,227,176,.9);animation:floatUp .9s ease-out forwards;z-index:99;font-variant-numeric:tabular-nums}@keyframes floatUp{from{opacity:1;transform:translate(-50%,0) scale(1)}to{opacity:0;transform:translate(-50%,-55px) scale(1.25)}}#ioModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;padding:16px}#ioModal.show{display:flex}.io-box{background:#121a25;border:1px solid #2a3a4d;border-radius:12px;padding:14px;width:100%;max-width:540px;display:flex;flex-direction:column;gap:10px}.io-title{font-size:15px;font-weight:600;color:#cfdcea;text-align:center}.io-help{font-size:11.5px;color:#7a8a9e;line-height:1.75;text-align:left;background:#0a1018;border:1px solid #1b2532;border-radius:8px;padding:9px 11px}.io-help b{color:#ff88aa}.io-help em{color:#7fe3b0;font-style:normal}#ioText{width:100%;height:140px;background:#0a1018;border:1px solid #1b2532;border-radius:8px;color:#a8b8c8;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;padding:8px;resize:none;word-break:break-all;line-height:1.4}.io-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}.io-btn{font-family:inherit;font-size:12px;padding:9px 16px;border-radius:7px;border:1px solid #253242;background:#151f2b;color:#8fa8c0;cursor:pointer;transition:.15s}.io-btn:hover{background:#1c2a3a}.io-btn.primary{background:#14453a;border-color:#2f9a72;color:#7fe3b0}.io-btn.primary:hover{background:#1b5c4c}@media(max-width:420px){.stat .value{font-size:15px}.buy-btn{padding:6px 7px;font-size:10px}.tier-name{font-size:12.5px}.up-btn{padding:7px 8px;font-size:10px}.tab{font-size:10px;padding:7px 2px}}</style></head><body>
+<div id="app"><h1>电 池 增 量</h1><div class="subtitle">BATTERY INCREMENTAL 0.3.0</div>
+<div class="tabs" id="tabs"><div class="tab active" data-tab="battery">电池</div><div class="tab" data-tab="upgrade">升级</div><div class="tab" data-tab="prestige">转生</div><div class="tab" data-tab="core">核心</div><div class="tab" data-tab="sing">奇点</div><div class="tab" data-tab="setting">设置</div></div>
+<div class="stats"><div class="stat"><div class="label">电量</div><div class="value" id="charge">0</div></div><div class="stat"><div class="label">每秒产出</div><div class="value" id="cps">0</div></div><div class="stat"><div class="label">核心</div><div class="value" id="cores">0</div></div></div>
+<div class="stats" id="b555Stats" style="display:none;grid-template-columns:1fr 1fr 1fr"><div class="stat"><div class="label">555电池</div><div class="value" id="b555">0</div></div><div class="stat"><div class="label">引爆次数</div><div class="value" id="boomCount">0</div></div><div class="stat"><div class="label">555倍率</div><div class="value" id="b555Mult">×1</div></div></div>
+<div class="stats" id="singStats" style="display:none;grid-template-columns:1fr 1fr 1fr"><div class="stat"><div class="label">奇点核心</div><div class="value" id="singCores">0</div></div><div class="stat"><div class="label">湮灭次数</div><div class="value" id="annihilationCount">0</div></div><div class="stat"><div class="label">奇点倍率</div><div class="value" id="singMult">×1</div></div></div>
+<div class="tab-panel active" id="tab-battery"><button id="manual">手动充电（可长按）</button><div class="click-info" id="clickInfo">每次 +1 电量 · 长按持续充电</div><div id="autoBuyRow"></div><div class="panel"><h2>电池组</h2><div id="tiers"></div></div></div>
+<div class="tab-panel" id="tab-upgrade"><div class="panel"><h2>升级</h2><div style="margin-bottom:8px;display:flex;justify-content:flex-end"><button id="buyAllMaxBtn" class="buy-btn">全部升到最大</button></div><div id="upgrades"></div><div id="specialUpgrades"></div></div></div>
+<div class="tab-panel" id="tab-prestige"><div class="panel"><h2>小转生</h2><div class="forge sp"><div class="forge-head"><div class="forge-title">⚡ 小 转 生</div><div class="forge-gain" id="spGain">当前 0 次 · 倍率 ×1</div></div><div class="forge-desc">重置电量、电池组与升级，获得 <b>转生次数</b>。<br>每次转生提供 <b>+5%</b> 全局产量（乘算叠加）。<br>需要本轮累计 <b>555</b> 电量才能转生。</div><button id="spBtn" disabled>小 转 生</button></div></div><div class="panel"><h2>核心熔炉</h2><div class="forge"><div class="forge-head"><div class="forge-title">⚛ 重铸电网</div><div class="forge-gain" id="forgeGain">可获得 0 核心</div></div><div class="forge-desc">摧毁当前所有电池与升级，换取 <b>核心</b>。<br>每个核心永久提升全部产量，倍率 <b id="coreMultTxt">×1.00</b>。<br>需要本轮累计 <b id="forgeReq">1.00e6</b> 电量才能重铸。</div><button id="forgeBtn" disabled>重 铸 电 网</button></div></div><div class="panel" id="autoPrestigePanel" style="display:none"><h2>自动重铸</h2><div class="auto-row purple"><span>启用自动重铸</span><div class="switch purple" id="apSwitch"></div></div><div class="ap-config"><div class="ap-line"><span>本次可获得核心 ≥</span><input id="apCoreInput" class="ap-input" type="text" inputmode="decimal" placeholder="如 1e10" value="1e10"><span class="hint">时重铸</span></div><div class="ap-line"><span>本次可获得核心 ≥ 上次获得的</span><input id="apMultInput" class="ap-input" type="number" inputmode="decimal" step="0.1" min="0" placeholder="如 2" value="2"><span class="hint">倍时重铸</span></div><div class="ap-line"><span class="hint">两个条件满足任意一个即触发 · 留空 / 填 0 表示不启用该条件</span></div></div></div></div>
+<div class="tab-panel" id="tab-core"><div class="panel" id="boomPanel" style="display:none"><h2>引爆你的电池</h2><div class="forge boom"><div class="forge-head"><div class="forge-title">💥 引 爆</div><div class="forge-gain" id="boomGain">可获得 0 个555电池</div></div><div class="forge-desc">炸毁你的全部核心与电池，获得 <b>555电池</b>。<br>获得公式：<b>10^((log10(核心)-10)/5)</b>。<br>需要 <b>1e10</b> 核心作为引信。<br>555电池可购买紫色强力升级，永久保留。</div><button id="boomBtn" disabled>引 爆 电 池</button></div></div><div class="panel" id="autoBoomPanel" style="display:none"><h2>自动引爆</h2><div class="auto-row purple"><span>启用自动引爆</span><div class="switch purple" id="abSwitch"></div></div><div class="ap-config"><div class="ap-line"><span>本次可获得 555电池 ≥</span><input id="abThreshold" class="ap-input" type="text" inputmode="decimal" placeholder="如 1e5" value="10"><span class="hint">时引爆</span></div></div></div><div class="panel" id="p555Panel" style="display:none"><h2>555 电池升级</h2><div id="u555List"></div></div></div>
+<div class="tab-panel" id="tab-sing"><div class="panel" id="singPanel" style="display:none"><h2>湮灭你的电池</h2><div class="forge singular"><div class="forge-head"><div class="forge-title">🌌 湮 灭</div><div class="forge-gain" id="singGain">可获得 0 个奇点核心</div></div><div class="forge-desc">彻底抹除全部核心、555电池与全部升级，获得 <b>奇点核心</b>。<br>获得公式：<b>√(555电池)/10</b>。<br>需要 <b>100</b> 个555电池作为引信。<br>奇点核心可用于购买蓝色终极升级，并永久提升产量。</div><button id="singBtn" disabled>湮 灭 电 池</button></div></div><div class="panel" id="autoAnnihilatePanel" style="display:none"><h2>自动湮灭</h2><div class="auto-row blue"><span>启用自动湮灭</span><div class="switch blue" id="aaSwitch"></div></div><div class="ap-config"><div class="ap-line"><span>本次可获得 奇点核心 ≥</span><input id="aaThreshold" class="ap-input" type="text" inputmode="decimal" placeholder="如 100" value="5"><span class="hint">时湮灭</span></div></div></div><div class="panel" id="pSingPanel" style="display:none"><h2>奇点核心升级</h2><div id="uSingList"></div></div></div>
+<div class="tab-panel" id="tab-setting"><div class="panel"><h2>存档</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="buy-btn" id="exportBtn">导出存档</button><button class="buy-btn" id="importBtn">导入存档</button><button class="buy-btn" id="wipeBtn">清除存档</button></div></div><div class="panel"><h2>说明</h2><div style="font-size:11.5px;color:#7a8a9e;line-height:1.9">· 高级电池组会为紧邻的低级电池组提供产量加成。<br>· 小转生提供乘算倍率，核心重铸提供永久核心倍率。<br>· 自动存档每 10 秒一次，离线最多 8 小时（可升级）。</div></div></div>
+<div class="footer"><div id="versionTxt">v0.3.0 · 自动存档 10s</div></div></div>
+<div id="ioModal"><div class="io-box"><div class="io-title" id="ioTitle"></div><div class="io-help" id="ioHelp"></div><textarea id="ioText" spellcheck="false"></textarea><div class="io-actions"><button class="io-btn" id="ioPaste">粘贴</button><button class="io-btn" id="ioCopy">复制</button><button class="io-btn" id="ioConfirm">确定</button><button class="io-btn" id="ioCancel">取消</button></div></div></div><div id="toasts"></div>
+<script>
+'use strict';
+// ===== 大数库 =====
+const B={z:[0,0],
+fn(x){if(!(x>0)||!isFinite(x))return[0,0];const e=Math.floor(Math.log10(x));return[x/Math.pow(10,e),e]},
+n(m,e){if(!(m>0)||!isFinite(m))return[0,0];if(!isFinite(e))return[0,0];while(m>=10){m/=10;e++}while(m<1){m*=10;e--}return[m,e]},
+cmp(a,b){if(a[0]===0)return b[0]===0?0:-1;if(b[0]===0)return 1;if(a[1]!==b[1])return a[1]>b[1]?1:-1;return a[0]>b[0]?1:a[0]<b[0]?-1:0},
+add(a,b){if(a[0]===0)return[b[0],b[1]];if(b[0]===0)return[a[0],a[1]];const h=a[1]>=b[1]?a:b,l=a[1]>=b[1]?b:a,d=h[1]-l[1];if(d>17)return[h[0],h[1]];return this.n(h[0]+l[0]/Math.pow(10,d),h[1])},
+sub(a,b){if(b[0]===0)return[a[0],a[1]];if(a[0]===0)return[0,0];const d=a[1]-b[1];if(d>17)return[a[0],a[1]];const m=a[0]-b[0]/Math.pow(10,d);return m<=0?[0,0]:this.n(m,a[1])},
+mul(a,b){if(a[0]===0||b[0]===0)return[0,0];return this.n(a[0]*b[0],a[1]+b[1])},
+div(a,b){if(b[0]===0)return[1e9,0];if(a[0]===0)return[0,0];return this.n(a[0]/b[0],a[1]-b[1])},
+pow(a,p){if(a[0]===0)return[0,0];if(p===0)return[1,0];if(!isFinite(p))return[0,0];const lg=a[1]+Math.log10(a[0]);const s=lg*p;if(!isFinite(s))return[0,0];const e=Math.floor(s);return[Math.pow(10,s-e),e]},
+sqrt(a){if(a[0]===0)return[0,0];const lg=a[1]+Math.log10(a[0]);const s=lg/2;const e=Math.floor(s);return[Math.pow(10,s-e),e]},
+log10(a){return a[0]===0?-Infinity:a[1]+Math.log10(a[0])},
+fmt(a){
+  if(a[0]===0)return'0';
+  const m=a[0],e=a[1];
+  if(e>=0&&e<6){
+    const v=m*Math.pow(10,e);
+    if(v<1000)return v.toFixed(2).replace(/\.?0+$/,'');
+    if(v<100000)return Math.floor(v).toString();
+  }
+  if(e<1e8){
+    return m.toFixed(2).replace(/\.?0+$/,'')+'e'+e;
+  }
+  const ee=Math.log10(e);
+  const g=Math.floor(ee);
+  const f=Math.pow(10,ee-g);
+  return 'e'+f.toFixed(2).replace(/\.?0+$/,'')+'e'+g;
+}};
+function parseBN(str){
+  const s=String(str==null?'':str).trim().toLowerCase().replace(/[,_\s]/g,'');
+  if(!s)return B.z.slice();
+  const m=s.match(/^([0-9]*\.?[0-9]+)(?:e([+-]?[0-9]+(?:\.[0-9]+)?))?$/);
+  if(!m)return B.z.slice();
+  const mant=parseFloat(m[1]);
+  const exp=m[2]?parseFloat(m[2]):0;
+  if(!(mant>0)||!isFinite(mant))return B.z.slice();
+  return B.n(mant,exp);
+}
+function bulkCostBN(baseCost,growth,startLevel,count){
+  if(count<=0)return B.z.slice();
+  if(growth<=1)return B.mul(B.fn(baseCost*count),B.fn(1));
+  const g=B.fn(growth);
+  const c0=B.mul(B.fn(baseCost),B.pow(g,startLevel));
+  const num=B.sub(B.pow(g,count),[1,0]);
+  const den=B.sub(g,[1,0]);
+  return B.mul(c0,B.div(num,den));
+}
+function maxLevelBN(available,baseCost,growth,startLevel,maxLevels){
+  const maxL=maxLevels==null?Infinity:maxLevels;
+  if(startLevel>=maxL)return 0;
+  if(growth<=1)return 0;
+  const c0=B.mul(B.fn(baseCost),B.pow(B.fn(growth),startLevel));
+  if(B.cmp(available,c0)<0)return 0;
+  const R=B.add(B.div(B.mul(available,B.fn(growth-1)),c0),B.fn(1));
+  const logR=B.log10(R);
+  let n;
+  if(!isFinite(logR))n=0;else n=Math.floor(logR/Math.log10(growth));
+  if(!isFinite(n)||n<0)n=0;
+  const cap=maxL-startLevel;
+  let result=Math.min(n,cap);
+  let guard=0;
+  while(result>0&&B.cmp(bulkCostBN(baseCost,growth,startLevel,result),available)>0&&guard++<10)result--;
+  guard=0;
+  while(result<cap&&B.cmp(bulkCostBN(baseCost,growth,startLevel,result+1),available)<=0&&guard++<5)result++;
+  return Math.max(0,result);
+}
+// ===== 数据（重平衡：成本曲线放缓，引入高级线增强低级线） =====
+const TIERS=[
+{name:'原电池',color:'#5ee0a0',baseCost:1e1,growth:1.12,prod:1},
+{name:'锌锰电池',color:'#5ec8e0',baseCost:1e2,growth:1.14,prod:8},
+{name:'铅蓄电池',color:'#7a9ae8',baseCost:1e3,growth:1.16,prod:60},
+{name:'镍氢电池',color:'#a87ae8',baseCost:1e4,growth:1.18,prod:400},
+{name:'锂电池',color:'#e07ae0',baseCost:1e6,growth:1.20,prod:3000},
+{name:'钠离子电池',color:'#e07a8a',baseCost:1e8,growth:1.22,prod:2e4},
+{name:'固态电池',color:'#e0a85e',baseCost:1e10,growth:1.25,prod:1.5e5},
+{name:'核电池',color:'#e0e05e',baseCost:1e12,growth:1.28,prod:1e6}];
+const UPGRADES=[{id:'volt',name:'电压强化',icon:'⚡',desc:'所有电池产量 ×1.5',baseCost:5e2,growth:6},{id:'coil',name:'超导线圈',icon:'🧲',desc:'所有电池产量 ×2',baseCost:1e5,growth:10},{id:'quantum',name:'量子储能',icon:'🌀',desc:'所有电池产量 ×3',baseCost:1e11,growth:20},{id:'click',name:'手动效率',icon:'👆',desc:'手动充电收益翻倍',baseCost:1e2,growth:8,max:20}];
+const U555=[
+ {id:'r',name:'555共振',icon:'📡',desc:'所有产量 ×555^等级',baseCost:1,growth:5},
+ {id:'c',name:'555核心',icon:'🔮',desc:'核心倍率指数 +0.05/级',baseCost:2,growth:10},
+ {id:'g',name:'555引力',icon:'🌌',desc:'引爆获得 +55.5%/级',baseCost:3,growth:15},
+ {id:'f',name:'555熔炉',icon:'⚛',desc:'重铸获得核心 ×(1+等级)',baseCost:4,growth:12},
+ {id:'a',name:'555自动机',icon:'🤖',desc:'每秒自动充电 等级 次',baseCost:5,growth:25},
+ {id:'d',name:'555折扣',icon:'💠',desc:'电池价格 ×0.95^等级（最大30级）',baseCost:6,growth:14,max:30},
+ {id:'t',name:'555时域',icon:'⏳',desc:'离线效率 +4%/级，上限 +2小时/级（最大15级）',baseCost:8,growth:16,max:15},
+ {id:'m',name:'555增幅',icon:'✨',desc:'全局产量 ×(1+0.1×等级)',baseCost:12,growth:18},
+ {id:'i',name:'555智能',icon:'🧠',desc:'自动购买成本阈值 -0.4/级（最大10级，可降至1倍）',baseCost:15,growth:20,max:10},
+ {id:'p',name:'555协议',icon:'♻️',desc:'解锁自动重铸面板（可设阈值）',baseCost:20,growth:1,max:1},
+ {id:'s',name:'555奇点',icon:'🌠',desc:'解锁湮灭转生层与自动引爆',baseCost:100,growth:1,max:1}];
+const USing=[
+ {id:'s1',name:'奇点增幅',icon:'🌀',desc:'所有产量 ×1.5^等级',baseCost:1,growth:2},
+ {id:'s2',name:'奇点电池',icon:'⚡',desc:'555获得 ×(1+0.5×等级)',baseCost:2,growth:3},
+ {id:'s3',name:'奇点核心',icon:'⚛',desc:'核心倍率指数 +0.1/级',baseCost:5,growth:5},
+ {id:'s4',name:'奇点折扣',icon:'💠',desc:'电池价格 ×0.9^等级（最大20级）',baseCost:3,growth:4,max:20},
+ {id:'s5',name:'奇点时域',icon:'⏳',desc:'离线效率 +10%/级，上限 +5小时/级（最大10级）',baseCost:4,growth:6,max:10},
+ {id:'s6',name:'奇点自动化',icon:'🤖',desc:'解锁自动引爆与自动湮灭面板',baseCost:8,growth:1,max:1}];
+const SAVE_KEY='battery-incremental-save-v3',FORGE_REQ=1e6,OFFLINE_RATE=0.4,OFFLINE_CAP=8*3600,SAVE_HEADER='BATTERY012:',SAVE_FOOTER=':END',AUTOSAVE_MS=10000,BOOM_REQ_LOG10=10,SING_REQ=100,AUTO_UP_COST=1e10,AUTO_MAX_COST=1e200,SP_REQ=555;
+function defState(){return{
+  charge:B.z.slice(),runCharge:B.z.slice(),totalCharge:B.z.slice(),cores:B.z.slice(),
+  prestiges:0,prestigeCount:0,batteries555:B.z.slice(),booms:0,singCores:B.z.slice(),annihilations:0,
+  tiers:TIERS.map(()=>0),upgrades:{},upgrades555:{},upgradesSing:{},
+  autoBuy:false,autoBuyMax:false,autoUpgradeUnlocked:false,autoUpgrade:false,autoMaxUnlocked:false,
+  autoPrestige:false,autoPrestigeCoreTarget:'1e10',autoPrestigeMult:2,
+  autoBoom:false,autoBoomThreshold:B.fn(10),autoAnnihilate:false,autoAnnihilateThreshold:B.fn(5),
+  lastPrestigeGain:B.z.slice(),lastSave:Date.now()}}
+let state=defState(),P={prod:B.z.slice(),mult:B.z.slice(),coreMult:B.z.slice(),singMult:[1,0]};
+let autoPrestigeTimer=0,autoBoomTimer=0,autoAnnihilateTimer=0;
+function fmtTime(s){if(s<60)return Math.floor(s)+' 秒';if(s<3600)return Math.floor(s/60)+' 分钟';return(s/3600).toFixed(1)+' 小时'}
+function setText(n,t){if(n&&n.textContent!==t)n.textContent=t}
+function toast(m,pink){const b=document.getElementById('toasts'),t=document.createElement('div');t.className='toast'+(pink===true?' pink':(pink==='blue'?' blue':''));t.textContent=m;b.appendChild(t);setTimeout(()=>{t.style.transition='opacity .4s, transform .4s';t.style.opacity='0';t.style.transform='translateY(10px)';setTimeout(()=>t.remove(),420)},2600)}
+function u555Level(u){return state.upgrades555[u.id]||0}
+function u555ById(id){return state.upgrades555[id]||0}
+function uSingLevel(u){return state.upgradesSing[u.id]||0}
+function uSingById(id){return state.upgradesSing[id]||0}
+// ===== 计算 =====
+function coreMultiplier(){const exp=1.3+0.05*u555ById('c')+0.1*uSingById('s3');return B.add([1,0],B.pow(state.cores,exp))}
+function b555Mult(){return B.pow(B.fn(Math.pow(5.55,2)),u555ById('r'))}
+function b555GainMult(){return (1+0.555*u555ById('g'))*(1+0.5*uSingById('s2'))}
+function discountMult(){return Math.pow(0.95,u555ById('d'))*Math.pow(0.9,uSingById('s4'))}
+function singMult(){return B.pow(B.fn(1.5),uSingById('s1'))}
+function up555Mult(){return 1+0.1*u555ById('m')}
+function autoBuyThreshold(){return Math.max(1,5-0.4*u555ById('i'))}
+function prestigeMult(){return B.pow([1.05,0],state.prestigeCount)}
+function tierBoost(i){return 1+(state.tiers[i+1]||0)*0.03}
+function recalc(){
+  const m=B.mul(B.mul(B.mul(B.mul(B.mul(B.pow([1.5,0],state.upgrades.volt||0),B.mul(B.pow([2,0],state.upgrades.coil||0),B.pow([3,0],state.upgrades.quantum||0))),coreMultiplier()),b555Mult()),B.mul(B.fn(up555Mult()),singMult())),prestigeMult());
+  P.coreMult=coreMultiplier();P.singMult=singMult();P.mult=m;
+  let p=B.z.slice();
+  for(let i=0;i<TIERS.length;i++)if(state.tiers[i]>0)p=B.add(p,B.mul(B.fn(state.tiers[i]*TIERS[i].prod*tierBoost(i)),m));
+  P.prod=p;
+}
+function clickPower(){const base=B.add([1,0],B.mul(P.prod,[1,-1]));const mult=B.mul(B.mul(B.pow([2,0],state.upgrades.click||0),B.pow(B.fn(Math.pow(5.55,2)),u555ById('c'))),B.pow(B.fn(Math.pow(5.55,2)),uSingById('s3')));return B.mul(base,mult)}
+// ===== 电池购买 =====
+function tierCost(t){const i=TIERS.indexOf(t);return B.mul(B.fn(t.baseCost*discountMult()),B.pow(B.fn(t.growth),state.tiers[i]))}
+function bulkCost(t,n){return bulkCostBN(t.baseCost*discountMult(),t.growth,state.tiers[TIERS.indexOf(t)],n)}
+function maxAffordable(t){
+  const c0=tierCost(t),g=t.growth,lgg=Math.log10(g);
+  const logCharge=B.log10(state.charge),logC0=B.log10(c0);
+  if(logCharge===-Infinity||logCharge<logC0-15)return 0;
+  const logRatio=logCharge+Math.log10(g-1)-logC0;
+  let n;
+  if(logRatio>12){n=Math.floor(logRatio/lgg);}
+  else{const ratio=Math.pow(10,logRatio);n=Math.floor(Math.log(ratio+1)/Math.LN10/lgg);}
+  if(n<0)n=0;if(n>1e18)n=1e18;
+  let guard=0;
+  while(n>0&&B.cmp(bulkCost(t,n),state.charge)>0&&guard++<8)n--;
+  guard=0;
+  while(B.cmp(bulkCost(t,n+1),state.charge)<=0&&guard++<8)n++;
+  return n;
+}
+function buyTier(t,a){const n=Math.min(a,maxAffordable(t));if(n<=0)return;const c=bulkCost(t,n);if(B.cmp(state.charge,c)<0)return;state.charge=B.sub(state.charge,c);state.tiers[TIERS.indexOf(t)]+=n}
+// ===== 升级购买 =====
+function upgradeLevel(u){return state.upgrades[u.id]||0}
+function upgradeCost(u){return B.mul(B.fn(u.baseCost),B.pow(B.fn(u.growth),upgradeLevel(u)))}
+function maxUpgradeLevels(u){return maxLevelBN(state.charge,u.baseCost,u.growth,upgradeLevel(u),u.max)}
+function buyUpgrade(u,n){n=n||1;for(let i=0;i<n;i++){const l=upgradeLevel(u);if(u.max&&l>=u.max)break;const c=upgradeCost(u);if(B.cmp(state.charge,c)<0)break;state.charge=B.sub(state.charge,c);state.upgrades[u.id]=l+1}}
+function buyUpgradeMax(u){
+  const n=maxUpgradeLevels(u);
+  if(n<=0)return 0;
+  const l=upgradeLevel(u);
+  const total=bulkCostBN(u.baseCost,u.growth,l,n);
+  if(B.cmp(state.charge,total)<0)return 0;
+  state.charge=B.sub(state.charge,total);
+  state.upgrades[u.id]=l+n;
+  return n;
+}
+function u555Cost(u){return B.mul(B.fn(u.baseCost),B.pow(B.fn(u.growth),u555Level(u)))}
+function max555Levels(u){return maxLevelBN(state.batteries555,u.baseCost,u.growth,u555Level(u),u.max)}
+function buyU555(u,n){
+  n=n||1;
+  for(let i=0;i<n;i++){
+    const l=u555Level(u);if(u.max&&l>=u.max)break;
+    const c=u555Cost(u);if(B.cmp(state.batteries555,c)<0)break;
+    state.batteries555=B.sub(state.batteries555,c);state.upgrades555[u.id]=l+1;
+    if(u.id==='p'){state.autoPrestige=true;refreshAutoPrestigePanel()}
+    if(u.id==='s'){state.autoBoom=true;refreshAutoBoomPanel()}
+  }
+  recalc();save();
+}
+function buyU555Max(u){
+  const n=max555Levels(u);
+  if(n<=0)return;
+  const l=u555Level(u);
+  const total=bulkCostBN(u.baseCost,u.growth,l,n);
+  if(B.cmp(state.batteries555,total)<0)return;
+  state.batteries555=B.sub(state.batteries555,total);
+  state.upgrades555[u.id]=l+n;
+  if(u.id==='p'){state.autoPrestige=true;refreshAutoPrestigePanel()}
+  if(u.id==='s'){state.autoBoom=true;refreshAutoBoomPanel()}
+  recalc();save();
+}
+function uSingCost(u){return B.mul(B.fn(u.baseCost),B.pow(B.fn(u.growth),uSingLevel(u)))}
+function maxSingLevels(u){return maxLevelBN(state.singCores,u.baseCost,u.growth,uSingLevel(u),u.max)}
+function buyUSing(u,n){
+  n=n||1;
+  for(let i=0;i<n;i++){
+    const l=uSingLevel(u);if(u.max&&l>=u.max)break;
+    const c=uSingCost(u);if(B.cmp(state.singCores,c)<0)break;
+    state.singCores=B.sub(state.singCores,c);state.upgradesSing[u.id]=l+1;
+    if(u.id==='s6'){state.autoAnnihilate=true;refreshAutoAnnihilatePanel()}
+  }
+  recalc();save();
+}
+function buyUSingMax(u){
+  const n=maxSingLevels(u);
+  if(n<=0)return;
+  const l=uSingLevel(u);
+  const total=bulkCostBN(u.baseCost,u.growth,l,n);
+  if(B.cmp(state.singCores,total)<0)return;
+  state.singCores=B.sub(state.singCores,total);
+  state.upgradesSing[u.id]=l+n;
+  if(u.id==='s6'){state.autoAnnihilate=true;refreshAutoAnnihilatePanel()}
+  recalc();save();
+}
+// ===== 小转生 =====
+function prestigeGain(){
+  if(B.cmp(state.runCharge,B.fn(SP_REQ))<0)return 0;
+  return Math.floor(B.log10(state.runCharge)*2);
+}
+function doSmallPrestige(){
+  const g=prestigeGain();
+  if(g<=0)return false;
+  state.prestigeCount+=g;
+  state.charge=B.z.slice();state.runCharge=B.z.slice();
+  state.tiers=TIERS.map(()=>0);state.upgrades={};
+  recalc();save();
+  toast('⚡ 小转生完成！+'+g+' 转生次数');
+  return true;
+}
+// ===== 核心熔炉 =====
+function coreGain(){const base=B.sqrt(B.div(state.runCharge,B.fn(FORGE_REQ)));return B.mul(base,B.fn(1+u555ById('f')))}
+function doPrestige(silent){
+  const g=coreGain();
+  if(B.cmp(g,[1,0])<0)return false;
+  state.cores=B.add(state.cores,g);
+  state.lastPrestigeGain=g;
+  state.prestiges++;
+  state.charge=B.z.slice();state.runCharge=B.z.slice();
+  state.tiers=TIERS.map(()=>0);state.upgrades={};
+  recalc();
+  if(!silent){toast('⚛ 重铸完成！获得 '+B.fmt(g)+' 个核心');save()}
+  return true;
+}
+// ===== 引爆 =====
+function boomGain(){
+  const lg=B.log10(state.cores);
+  if(lg<BOOM_REQ_LOG10)return B.z.slice();
+  const exp=(lg-BOOM_REQ_LOG10)/5;
+  let val=B.n(1,exp);
+  val=B.mul(val,B.fn(b555GainMult()));
+  if(val[1]<15){
+    const v=val[0]*Math.pow(10,val[1]);
+    const f=Math.floor(v);
+    if(f<1)return[1,0];
+    return B.fn(f);
+  }
+  if(B.cmp(val,[1,0])<0)return[1,0];
+  return val;
+}
+function doBoom(){
+  const g=boomGain();if(B.cmp(g,B.z)<=0)return;
+  state.batteries555=B.add(state.batteries555,g);state.booms++;
+  state.charge=B.z.slice();state.runCharge=B.z.slice();
+  state.cores=B.z.slice();
+  state.tiers=TIERS.map(()=>0);state.upgrades={};
+  recalc();save();
+  toast('💥 引爆成功！获得 '+B.fmt(g)+' 个555电池',true);
+}
+// ===== 湮灭 =====
+function singGain(){
+  if(B.cmp(state.batteries555,B.fn(SING_REQ))<0)return B.z.slice();
+  const s=B.mul(B.sqrt(state.batteries555),B.fn(0.1));
+  if(s[1]<15){
+    const v=s[0]*Math.pow(10,s[1]);
+    const f=Math.floor(v);
+    if(f<1)return[1,0];
+    return B.fn(f);
+  }
+  if(B.cmp(s,[1,0])<0)return[1,0];
+  return s;
+}
+function doAnnihilate(){
+  const g=singGain();if(B.cmp(g,B.z)<=0)return;
+  state.singCores=B.add(state.singCores,g);state.annihilations++;
+  state.charge=B.z.slice();state.runCharge=B.z.slice();
+  state.cores=B.z.slice();state.batteries555=B.z.slice();
+  state.tiers=TIERS.map(()=>0);state.upgrades={};state.upgrades555={};
+  recalc();save();
+  toast('🌌 湮灭成功！获得 '+B.fmt(g)+' 个奇点核心','blue');
+  refreshAutoPrestigePanel();refreshAutoBoomPanel();refreshAutoAnnihilatePanel();
+}
+// ===== 自动解锁 =====
+function canUnlockAutoUp(){return !state.autoUpgradeUnlocked&&B.cmp(state.cores,B.fn(AUTO_UP_COST))>=0}
+function canUnlockAutoMax(){return !state.autoMaxUnlocked&&B.cmp(state.cores,B.fn(AUTO_MAX_COST))>=0}
+function unlockAutoUp(){if(!canUnlockAutoUp())return;state.cores=B.sub(state.cores,B.fn(AUTO_UP_COST));state.autoUpgradeUnlocked=true;state.autoUpgrade=true;recalc();refreshAutoRows();save();toast('🤖 已解锁自动购买升级',true)}
+function unlockAutoMax(){if(!canUnlockAutoMax())return;state.cores=B.sub(state.cores,B.fn(AUTO_MAX_COST));state.autoMaxUnlocked=true;state.autoBuyMax=true;recalc();refreshAutoRows();save();toast('📈 已解锁自动购买最大',true)}
+// ===== 自动判定 =====
+function shouldAutoPrestige(){
+  if(!state.autoPrestige)return false;
+  const g=coreGain();
+  if(B.cmp(g,[1,0])<0)return false;
+  const target=parseBN(state.autoPrestigeCoreTarget);
+  if(target[0]>0&&B.cmp(g,target)>=0)return true;
+  const mult=state.autoPrestigeMult;
+  if(mult>0&&B.cmp(state.lastPrestigeGain,B.z)>0){
+    if(B.cmp(g,B.mul(state.lastPrestigeGain,B.fn(mult)))>=0)return true;
+  }
+  return false;
+}
+function shouldAutoBoom(){
+  if(!state.autoBoom||u555ById('s')===0)return false;
+  const g=boomGain();
+  if(B.cmp(g,B.z)<=0)return false;
+  return B.cmp(g,state.autoBoomThreshold)>=0;
+}
+function shouldAutoAnnihilate(){
+  if(!state.autoAnnihilate||uSingById('s6')===0)return false;
+  const g=singGain();
+  if(B.cmp(g,B.z)<=0)return false;
+  return B.cmp(g,state.autoAnnihilateThreshold)>=0;
+}
+// ===== 离线 =====
+function offlineRate(){return Math.min(1,OFFLINE_RATE+0.04*u555ById('t')+0.1*uSingById('s5'))}
+function offlineCapSec(){return OFFLINE_CAP+2*3600*u555ById('t')+5*3600*uSingById('s5')}
+// ===== 存档 =====
+function bnToJson(a){return[a[0],a[1]]}
+function jsonToBn(j){
+  if(Array.isArray(j)&&j.length===2&&typeof j[0]==='number'&&typeof j[1]==='number')return[j[0],j[1]];
+  if(typeof j==='number'&&isFinite(j)&&j>0)return B.fn(j);
+  return B.z.slice();
+}
+function collectSave(){return{
+  charge:bnToJson(state.charge),runCharge:bnToJson(state.runCharge),totalCharge:bnToJson(state.totalCharge),cores:bnToJson(state.cores),
+  prestiges:state.prestiges,prestigeCount:state.prestigeCount,batteries555:bnToJson(state.batteries555),booms:state.booms,singCores:bnToJson(state.singCores),annihilations:state.annihilations,
+  tiers:state.tiers,upgrades:state.upgrades,upgrades555:state.upgrades555,upgradesSing:state.upgradesSing,
+  autoBuy:state.autoBuy,autoBuyMax:state.autoBuyMax,autoUpgradeUnlocked:state.autoUpgradeUnlocked,autoUpgrade:state.autoUpgrade,autoMaxUnlocked:state.autoMaxUnlocked,
+  autoPrestige:state.autoPrestige,autoPrestigeCoreTarget:state.autoPrestigeCoreTarget,autoPrestigeMult:state.autoPrestigeMult,
+  autoBoom:state.autoBoom,autoBoomThreshold:bnToJson(state.autoBoomThreshold),
+  autoAnnihilate:state.autoAnnihilate,autoAnnihilateThreshold:bnToJson(state.autoAnnihilateThreshold),
+  lastPrestigeGain:bnToJson(state.lastPrestigeGain),lastSave:Date.now()}}
+function save(){state.lastSave=Date.now();try{localStorage.setItem(SAVE_KEY,JSON.stringify(collectSave()))}catch(e){}}
+function applySave(s){
+  if(!s||typeof s!=='object')throw new Error('bad');
+  state.charge=jsonToBn(s.charge);state.runCharge=jsonToBn(s.runCharge);state.totalCharge=jsonToBn(s.totalCharge);state.cores=jsonToBn(s.cores);
+  state.prestiges=typeof s.prestiges==='number'?s.prestiges:0;
+  state.prestigeCount=typeof s.prestigeCount==='number'?s.prestigeCount:0;
+  state.batteries555=jsonToBn(s.batteries555);
+  state.booms=typeof s.booms==='number'?s.booms:0;
+  state.singCores=jsonToBn(s.singCores);
+  state.annihilations=typeof s.annihilations==='number'?s.annihilations:0;
+  state.tiers=Array.isArray(s.tiers)?TIERS.map((_,i)=>s.tiers[i]||0):TIERS.map(()=>0);
+  state.upgrades=(s.upgrades&&typeof s.upgrades==='object')?s.upgrades:{};
+  state.upgrades555=(s.upgrades555&&typeof s.upgrades555==='object')?s.upgrades555:{};
+  state.upgradesSing=(s.upgradesSing&&typeof s.upgradesSing==='object')?s.upgradesSing:{};
+  state.autoBuy=!!s.autoBuy;state.autoBuyMax=!!s.autoBuyMax;
+  state.autoUpgradeUnlocked=!!s.autoUpgradeUnlocked;state.autoUpgrade=!!s.autoUpgrade;state.autoMaxUnlocked=!!s.autoMaxUnlocked;
+  state.autoPrestige=!!s.autoPrestige;state.autoPrestigeCoreTarget=typeof s.autoPrestigeCoreTarget==='string'?s.autoPrestigeCoreTarget:'1e10';state.autoPrestigeMult=(typeof s.autoPrestigeMult==='number'&&isFinite(s.autoPrestigeMult))?s.autoPrestigeMult:2;
+  state.autoBoom=!!s.autoBoom;state.autoBoomThreshold=jsonToBn(s.autoBoomThreshold)||B.fn(10);
+  if(state.autoBoomThreshold[0]===0)state.autoBoomThreshold=B.fn(10);
+  state.autoAnnihilate=!!s.autoAnnihilate;state.autoAnnihilateThreshold=jsonToBn(s.autoAnnihilateThreshold)||B.fn(5);
+  if(state.autoAnnihilateThreshold[0]===0)state.autoAnnihilateThreshold=B.fn(5);
+  state.lastPrestigeGain=jsonToBn(s.lastPrestigeGain);
+  state.lastSave=typeof s.lastSave==='number'?s.lastSave:Date.now();
+}
+function load(){try{const raw=localStorage.getItem(SAVE_KEY);if(!raw)return;const s=JSON.parse(raw);const last=typeof s.lastSave==='number'?s.lastSave:Date.now();applySave(s);const el2=Math.min((Date.now()-last)/1000,offlineCapSec());if(el2>10){recalc();const g=B.mul(P.prod,B.fn(el2*offlineRate()));if(B.cmp(g,B.z)>0){state.charge=B.add(state.charge,g);state.runCharge=B.add(state.runCharge,g);state.totalCharge=B.add(state.totalCharge,g);setTimeout(()=>toast('离线 '+fmtTime(el2)+'，获得 '+B.fmt(g)+' 电量'),400)}}}catch(e){console.warn('存档读取失败',e)}}
+// ===== LZ压缩 + Base64 =====
+const te=new TextEncoder(),td=new TextDecoder();
+function lzwEnc(str){const data=te.encode(str),dict=new Map();for(let i=0;i<256;i++)dict.set(String.fromCharCode(i),i);let next=256;const out=[];let w='';for(const b of data){const c=String.fromCharCode(b),wc=w+c;if(dict.has(wc)){w=wc}else{out.push(dict.get(w));if(next<4096)dict.set(wc,next++);w=c}}if(w!=='')out.push(dict.get(w));return out}
+function lzwDec(codes){if(!codes||!codes.length)return'';const dict=[];for(let i=0;i<256;i++)dict[i]=String.fromCharCode(i);let next=256,w=String.fromCharCode(codes[0]),result=w;for(let i=1;i<codes.length;i++){const k=codes[i];let entry;if(dict[k]!==undefined)entry=dict[k];else if(k===next)entry=w+w[0];else throw new Error('bad code');result+=entry;if(next<4096)dict[next++]=w+entry[0];w=entry}const bytes=new Uint8Array(result.length);for(let i=0;i<result.length;i++)bytes[i]=result.charCodeAt(i);return td.decode(bytes)}
+function pack12(codes){const bytes=[];let buf=0,bits=0;for(const c of codes){buf=(buf<<12)|c;bits+=12;while(bits>=8){bits-=8;bytes.push((buf>>bits)&0xff)}}if(bits>0)bytes.push((buf<<(8-bits))&0xff);return new Uint8Array(bytes)}
+function unpack12(bytes){const codes=[];let buf=0,bits=0;for(const b of bytes){buf=(buf<<8)|b;bits+=8;while(bits>=12){bits-=12;codes.push((buf>>bits)&0xfff)}}return codes}
+function toB64(bytes){let s='',CH=8192;for(let i=0;i<bytes.length;i+=CH)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH));return btoa(s)}
+function fromB64(b64){const s=atob(b64),a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a}
+function encodeSave(obj){const json=JSON.stringify(obj);const codes=lzwEnc(json);const packed=pack12(codes);const b64=toB64(packed);return SAVE_HEADER+b64+SAVE_FOOTER}
+function decodeSave(str){
+  str=(str||'').replace(/\s+/g,'');
+  if(!str)throw new Error('存档内容为空');
+  const i=str.indexOf(SAVE_HEADER),j=str.lastIndexOf(SAVE_FOOTER);
+  if(i<0)throw new Error('缺少起始标识');
+  if(j<0||j<=i)throw new Error('缺少结束标识');
+  const b64=str.slice(i+SAVE_HEADER.length,j);
+  if(!b64)throw new Error('存档内容为空');
+  let obj;
+  try{obj=JSON.parse(lzwDec(unpack12(fromB64(b64))))}catch(e){throw new Error('内容损坏或不是有效存档')}
+  if(!obj||typeof obj!=='object')throw new Error('存档结构不正确');
+  return obj;
+}
+// ===== DOM =====
+const el={charge:document.getElementById('charge'),cps:document.getElementById('cps'),cores:document.getElementById('cores'),b555:document.getElementById('b555'),boomCount:document.getElementById('boomCount'),b555Mult:document.getElementById('b555Mult'),b555Stats:document.getElementById('b555Stats'),singCores:document.getElementById('singCores'),annihilationCount:document.getElementById('annihilationCount'),singMult:document.getElementById('singMult'),singStats:document.getElementById('singStats'),manual:document.getElementById('manual'),clickInfo:document.getElementById('clickInfo'),tiers:document.getElementById('tiers'),upgrades:document.getElementById('upgrades'),specialUpgrades:document.getElementById('specialUpgrades'),forgeBtn:document.getElementById('forgeBtn'),forgeGain:document.getElementById('forgeGain'),forgeReq:document.getElementById('forgeReq'),coreMultTxt:document.getElementById('coreMultTxt'),boomPanel:document.getElementById('boomPanel'),boomBtn:document.getElementById('boomBtn'),boomGain:document.getElementById('boomGain'),singPanel:document.getElementById('singPanel'),singBtn:document.getElementById('singBtn'),singGain:document.getElementById('singGain'),p555Panel:document.getElementById('p555Panel'),u555List:document.getElementById('u555List'),pSingPanel:document.getElementById('pSingPanel'),uSingList:document.getElementById('uSingList'),autoBuyRow:document.getElementById('autoBuyRow'),autoPrestigePanel:document.getElementById('autoPrestigePanel'),apSwitch:document.getElementById('apSwitch'),apCoreInput:document.getElementById('apCoreInput'),apMultInput:document.getElementById('apMultInput'),autoBoomPanel:document.getElementById('autoBoomPanel'),abSwitch:document.getElementById('abSwitch'),abThreshold:document.getElementById('abThreshold'),autoAnnihilatePanel:document.getElementById('autoAnnihilatePanel'),aaSwitch:document.getElementById('aaSwitch'),aaThreshold:document.getElementById('aaThreshold'),buyAllMaxBtn:document.getElementById('buyAllMaxBtn'),spGain:document.getElementById('spGain'),spBtn:document.getElementById('spBtn')};
+const tierRefs=[],upRefs={},u555Refs={},uSingRefs={};
+let specialRows={};
+// ===== 构建 =====
+function buildTiers(){el.tiers.innerHTML='';tierRefs.length=0;TIERS.forEach((t,i)=>{const row=document.createElement('div');row.className='tier';const icon=document.createElement('div');icon.className='tier-icon';icon.style.setProperty('--c',t.color);icon.textContent='🔋';const info=document.createElement('div');info.className='tier-info';info.innerHTML='<div class="tier-name"></div><div class="tier-sub">数量 <b class="qty">0</b> · 产出 <b class="out">0</b>/秒 · 加成 <b class="boost">×1</b></div>';const btns=document.createElement('div');btns.className='tier-btns';const b1=document.createElement('button');b1.className='buy-btn';const b10=document.createElement('button');b10.className='buy-btn';const bmax=document.createElement('button');bmax.className='buy-btn';b1.textContent='买 1';b10.textContent='买 10';bmax.textContent='最大';b1.addEventListener('click',()=>{buyTier(t,1);render()});b10.addEventListener('click',()=>{buyTier(t,10);render()});bmax.addEventListener('click',()=>{buyTier(t,maxAffordable(t));render()});btns.appendChild(b1);btns.appendChild(b10);btns.appendChild(bmax);row.appendChild(icon);row.appendChild(info);row.appendChild(btns);el.tiers.appendChild(row);tierRefs.push({row,name:info.querySelector('.tier-name'),qty:info.querySelector('.qty'),out:info.querySelector('.out'),boost:info.querySelector('.boost'),b1,b10,bmax});tierRefs[i].name.textContent=t.name})}
+function buildUpgrades(){
+  el.upgrades.innerHTML='';
+  UPGRADES.forEach(u=>{
+    const row=document.createElement('div');row.className='upgrade';
+    const icon=document.createElement('div');icon.className='up-icon';icon.textContent=u.icon;
+    const info=document.createElement('div');info.className='up-info';
+    info.innerHTML='<div class="up-name"><span class="un"></span><span class="up-lvl"></span></div><div class="up-desc"></div>';
+    const btns=document.createElement('div');btns.className='up-btns';
+    const btn=document.createElement('button');btn.className='up-btn';
+    const btnMax=document.createElement('button');btnMax.className='up-btn';
+    btn.textContent='买 1';btnMax.textContent='最大';
+    btn.addEventListener('click',()=>{buyUpgrade(u,1);render()});
+    btnMax.addEventListener('click',()=>{buyUpgradeMax(u);render()});
+    btns.appendChild(btn);btns.appendChild(btnMax);
+    row.appendChild(icon);row.appendChild(info);row.appendChild(btns);
+    el.upgrades.appendChild(row);
+    info.querySelector('.un').textContent=u.name;
+    info.querySelector('.up-desc').textContent=u.desc;
+    upRefs[u.id]={row,lvl:info.querySelector('.up-lvl'),btn,btnMax};
+  });
+}
+function buildU555(){
+  el.u555List.innerHTML='';
+  U555.forEach(u=>{
+    const row=document.createElement('div');row.className='upgrade special';
+    const icon=document.createElement('div');icon.className='up-icon';icon.textContent=u.icon;
+    const info=document.createElement('div');info.className='up-info';
+    info.innerHTML='<div class="up-name"><span class="un"></span><span class="up-lvl"></span></div><div class="up-desc"></div>';
+    const btns=document.createElement('div');btns.className='up-btns';
+    const btn=document.createElement('button');btn.className='up-btn purple';
+    const btnMax=document.createElement('button');btnMax.className='up-btn purple';
+    btn.textContent='购买';btnMax.textContent='最大';
+    btn.addEventListener('click',()=>{buyU555(u,1);render()});
+    btnMax.addEventListener('click',()=>{buyU555Max(u);render()});
+    btns.appendChild(btn);
+    if(!u.max||u.max>1)btns.appendChild(btnMax);
+    row.appendChild(icon);row.appendChild(info);row.appendChild(btns);
+    el.u555List.appendChild(row);
+    info.querySelector('.un').textContent=u.name;
+    info.querySelector('.up-desc').textContent=u.desc;
+    u555Refs[u.id]={row,lvl:info.querySelector('.up-lvl'),btn,btnMax};
+  });
+}
+function buildUSing(){
+  el.uSingList.innerHTML='';
+  USing.forEach(u=>{
+    const row=document.createElement('div');row.className='upgrade singular';
+    const icon=document.createElement('div');icon.className='up-icon';icon.textContent=u.icon;
+    const info=document.createElement('div');info.className='up-info';
+    info.innerHTML='<div class="up-name"><span class="un"></span><span class="up-lvl"></span></div><div class="up-desc"></div>';
+    const btns=document.createElement('div');btns.className='up-btns';
+    const btn=document.createElement('button');btn.className='up-btn singular';
+    const btnMax=document.createElement('button');btnMax.className='up-btn singular';
+    btn.textContent='购买';btnMax.textContent='最大';
+    btn.addEventListener('click',()=>{buyUSing(u,1);render()});
+    btnMax.addEventListener('click',()=>{buyUSingMax(u);render()});
+    btns.appendChild(btn);
+    if(!u.max||u.max>1)btns.appendChild(btnMax);
+    row.appendChild(icon);row.appendChild(info);row.appendChild(btns);
+    el.uSingList.appendChild(row);
+    info.querySelector('.un').textContent=u.name;
+    info.querySelector('.up-desc').textContent=u.desc;
+    uSingRefs[u.id]={row,lvl:info.querySelector('.up-lvl'),btn,btnMax};
+  });
+}
+function buildSpecial(){el.specialUpgrades.innerHTML='';specialRows={};const configs=[{key:'up',icon:'🤖',name:'自动购买升级',desc:'解锁后自动购买可负担的升级（含最大等级）',costLabel:'1e10 核心',unlocked:()=>state.autoUpgradeUnlocked,unlock:unlockAutoUp},{key:'max',icon:'📈',name:'自动购买最大',desc:'自动购买电池时买最大数量',costLabel:'1e200 核心',unlocked:()=>state.autoMaxUnlocked,unlock:unlockAutoMax}];configs.forEach(cfg=>{const row=document.createElement('div');row.className='upgrade special';const icon=document.createElement('div');icon.className='up-icon';icon.textContent=cfg.icon;const info=document.createElement('div');info.className='up-info';info.innerHTML='<div class="up-name"><span class="un"></span></div><div class="up-desc"></div>';const btn=document.createElement('button');btn.className='up-btn purple';btn.addEventListener('click',()=>{cfg.unlock();render()});row.appendChild(icon);row.appendChild(info);row.appendChild(btn);el.specialUpgrades.appendChild(row);info.querySelector('.un').textContent=cfg.name;info.querySelector('.up-desc').textContent=cfg.desc;specialRows[cfg.key]={row,btn,info,cfg}})}
+// ===== 自动购买行 =====
+function refreshAutoRows(){
+  if(!el.autoBuyRow)return;
+  el.autoBuyRow.innerHTML='';
+  if(state.cores[0]>0||state.booms>0||state.singCores[0]>0){
+    const row=document.createElement('div');row.className='auto-row';row.innerHTML='<span>自动购买电池</span>';
+    const sw=document.createElement('div');sw.className='switch'+(state.autoBuy?' on':'');
+    sw.addEventListener('click',()=>{state.autoBuy=!state.autoBuy;sw.classList.toggle('on',state.autoBuy);save()});
+    row.appendChild(sw);el.autoBuyRow.appendChild(row);
+  }
+  if(state.autoMaxUnlocked){
+    const row=document.createElement('div');row.className='auto-row purple';row.innerHTML='<span>自动购买最大</span>';
+    const sw=document.createElement('div');sw.className='switch purple'+(state.autoBuyMax?' on':'');
+    sw.addEventListener('click',()=>{state.autoBuyMax=!state.autoBuyMax;sw.classList.toggle('on',state.autoBuyMax);save()});
+    row.appendChild(sw);el.autoBuyRow.appendChild(row);
+  }
+  if(state.autoUpgradeUnlocked){
+    const row=document.createElement('div');row.className='auto-row purple';row.innerHTML='<span>自动购买升级（最大）</span>';
+    const sw=document.createElement('div');sw.className='switch purple'+(state.autoUpgrade?' on':'');
+    sw.addEventListener('click',()=>{state.autoUpgrade=!state.autoUpgrade;sw.classList.toggle('on',state.autoUpgrade);save()});
+    row.appendChild(sw);el.autoBuyRow.appendChild(row);
+  }
+}
+// ===== 自动面板刷新 =====
+function syncAutoPrestigeUI(){
+  el.apSwitch.classList.toggle('on',!!state.autoPrestige);
+  if(document.activeElement!==el.apCoreInput)el.apCoreInput.value=state.autoPrestigeCoreTarget;
+  if(document.activeElement!==el.apMultInput)el.apMultInput.value=String(state.autoPrestigeMult);
+}
+function refreshAutoPrestigePanel(){const show=u555ById('p')>0;el.autoPrestigePanel.style.display=show?'':'none';if(show)syncAutoPrestigeUI()}
+function syncAutoBoomUI(){el.abSwitch.classList.toggle('on',!!state.autoBoom);if(document.activeElement!==el.abThreshold)el.abThreshold.value=B.fmt(state.autoBoomThreshold)}
+function refreshAutoBoomPanel(){const show=u555ById('s')>0;el.autoBoomPanel.style.display=show?'':'none';if(show)syncAutoBoomUI()}
+function syncAutoAnnihilateUI(){el.aaSwitch.classList.toggle('on',!!state.autoAnnihilate);if(document.activeElement!==el.aaThreshold)el.aaThreshold.value=B.fmt(state.autoAnnihilateThreshold)}
+function refreshAutoAnnihilatePanel(){const show=uSingById('s6')>0;el.autoAnnihilatePanel.style.display=show?'':'none';if(show)syncAutoAnnihilateUI()}
+el.apSwitch.addEventListener('click',()=>{state.autoPrestige=!state.autoPrestige;el.apSwitch.classList.toggle('on',state.autoPrestige);save()});
+el.apCoreInput.addEventListener('change',()=>{state.autoPrestigeCoreTarget=el.apCoreInput.value;save()});
+el.apCoreInput.addEventListener('blur',()=>{state.autoPrestigeCoreTarget=el.apCoreInput.value;save()});
+el.apMultInput.addEventListener('change',()=>{const v=parseFloat(el.apMultInput.value);state.autoPrestigeMult=(isFinite(v)&&v>=0)?v:0;save()});
+el.apMultInput.addEventListener('blur',()=>{const v=parseFloat(el.apMultInput.value);state.autoPrestigeMult=(isFinite(v)&&v>=0)?v:0;save()});
+el.abSwitch.addEventListener('click',()=>{state.autoBoom=!state.autoBoom;el.abSwitch.classList.toggle('on',state.autoBoom);save()});
+el.abThreshold.addEventListener('change',()=>{const v=parseBN(el.abThreshold.value);if(v[0]>0)state.autoBoomThreshold=v;save()});
+el.abThreshold.addEventListener('blur',()=>{const v=parseBN(el.abThreshold.value);if(v[0]>0)state.autoBoomThreshold=v;syncAutoBoomUI();save()});
+el.aaSwitch.addEventListener('click',()=>{state.autoAnnihilate=!state.autoAnnihilate;el.aaSwitch.classList.toggle('on',state.autoAnnihilate);save()});
+el.aaThreshold.addEventListener('change',()=>{const v=parseBN(el.aaThreshold.value);if(v[0]>0)state.autoAnnihilateThreshold=v;save()});
+el.aaThreshold.addEventListener('blur',()=>{const v=parseBN(el.aaThreshold.value);if(v[0]>0)state.autoAnnihilateThreshold=v;syncAutoAnnihilateUI();save()});
+el.buyAllMaxBtn.addEventListener('click',()=>{UPGRADES.forEach(u=>buyUpgradeMax(u));render()});
+el.spBtn.addEventListener('click',()=>{const g=prestigeGain();if(g<=0)return;if(confirm('确定小转生？\n将重置电量、电池组与升级，\n获得 '+g+' 次转生。')){doSmallPrestige();render()}});
+// ===== 渲染 =====
+let lastBoomShown=false,last555Shown=false,lastSingShown=false;
+function render(){
+  setText(el.charge,B.fmt(state.charge));setText(el.cps,B.fmt(P.prod));setText(el.cores,B.fmt(state.cores));
+  const show555=state.batteries555[0]>0||state.booms>0;
+  if(show555!==last555Shown){el.b555Stats.style.display=show555?'grid':'none';el.p555Panel.style.display=show555?'':'none';last555Shown=show555}
+  if(show555){setText(el.b555,B.fmt(state.batteries555));setText(el.boomCount,state.booms.toString());setText(el.b555Mult,'×'+B.fmt(b555Mult()))}
+  const showSing=state.singCores[0]>0||state.annihilations>0;
+  if(showSing!==lastSingShown){el.singStats.style.display=showSing?'grid':'none';el.pSingPanel.style.display=showSing?'':'none';lastSingShown=showSing}
+  if(showSing){setText(el.singCores,B.fmt(state.singCores));setText(el.annihilationCount,state.annihilations.toString());setText(el.singMult,'×'+B.fmt(P.singMult))}
+  setText(el.clickInfo,'每次 +'+B.fmt(clickPower())+' 电量 · 长按持续充电');
+  for(let i=0;i<TIERS.length;i++){
+    const t=TIERS[i],r=tierRefs[i],c1=tierCost(t),c10=bulkCost(t,10);
+    const can1=B.cmp(state.charge,c1)>=0,can10=B.cmp(state.charge,c10)>=0;
+    setText(r.qty,state.tiers[i].toString());
+    setText(r.out,B.fmt(B.mul(B.fn(state.tiers[i]*t.prod*tierBoost(i)),P.mult)));
+    setText(r.boost,'×'+tierBoost(i).toFixed(2));
+    setText(r.b1,'买 1 · '+B.fmt(c1));setText(r.b10,'买 10 · '+B.fmt(c10));setText(r.bmax,'最大');
+    r.b1.disabled=!can1;r.b10.disabled=!can10;r.bmax.disabled=!can1;
+    r.row.classList.toggle('affordable',can1);
+    r.row.classList.toggle('locked',!can1&&state.tiers[i]===0);
+  }
+  UPGRADES.forEach(u=>{
+    const r=upRefs[u.id],l=upgradeLevel(u),maxed=!!u.max&&l>=u.max,c=upgradeCost(u),can=!maxed&&B.cmp(state.charge,c)>=0;
+    setText(r.lvl,maxed?('Lv.'+l+' · 满'):('Lv.'+l));
+    setText(r.btn,maxed?'已满级':('买 1 · '+B.fmt(c)));
+    if(r.btnMax)setText(r.btnMax,maxed?'已满级':'最大');
+    r.btn.disabled=!can;if(r.btnMax)r.btnMax.disabled=!can;
+    r.row.classList.toggle('affordable',can);r.row.classList.toggle('maxed',maxed);
+  });
+  const g=coreGain();
+  setText(el.forgeGain,'可获得 '+B.fmt(g)+' 核心');
+  setText(el.coreMultTxt,'×'+B.fmt(P.coreMult));
+  setText(el.forgeReq,B.fmt(B.fn(FORGE_REQ)));
+  el.forgeBtn.disabled=B.cmp(g,[1,0])<0;
+  const pg=prestigeGain();
+  setText(el.spGain,'当前 '+state.prestigeCount+' 次 · 倍率 ×'+B.fmt(prestigeMult())+' · 本次 +'+pg);
+  el.spBtn.disabled=pg<=0;
+  ['up','max'].forEach(k=>{const sr=specialRows[k];if(!sr)return;const unlocked=sr.cfg.unlocked();if(unlocked){sr.btn.textContent='已解锁';sr.btn.disabled=true;sr.row.classList.remove('affordable')}else{const can=B.cmp(state.cores,B.fn(sr.cfg.cost))>=0;setText(sr.btn,sr.cfg.costLabel);sr.btn.disabled=!can;sr.row.classList.toggle('affordable',can)}});
+  const lg=B.log10(state.cores);
+  const showBoom=lg>=BOOM_REQ_LOG10-1||state.booms>0;
+  if(showBoom!==lastBoomShown){el.boomPanel.style.display=showBoom?'':'none';lastBoomShown=showBoom}
+  if(showBoom){const bg=boomGain();setText(el.boomGain,'可获得 '+B.fmt(bg)+' 个555电池');el.boomBtn.disabled=B.cmp(bg,B.z)<=0}
+  const showSingPanel=u555ById('s')>0||state.singCores[0]>0||state.annihilations>0;
+  el.singPanel.style.display=showSingPanel?'':'none';
+  if(showSingPanel){const sg=singGain();setText(el.singGain,'可获得 '+B.fmt(sg)+' 个奇点核心');el.singBtn.disabled=B.cmp(sg,B.z)<=0}
+  if(show555){
+    U555.forEach(u=>{
+      const r=u555Refs[u.id],l=u555Level(u),maxed=!!u.max&&l>=u.max,c=u555Cost(u),can=!maxed&&B.cmp(state.batteries555,c)>=0;
+      setText(r.lvl,maxed?'Lv.'+l+' · 满':('Lv.'+l));
+      setText(r.btn,maxed?'已满级':B.fmt(c));
+      if(r.btnMax)setText(r.btnMax,'最大');
+      r.btn.disabled=!can;if(r.btnMax)r.btnMax.disabled=!can;
+      r.row.classList.toggle('affordable',can);r.row.classList.toggle('maxed',maxed);
+    });
+  }
+  if(showSing){
+    USing.forEach(u=>{
+      const r=uSingRefs[u.id],l=uSingLevel(u),maxed=!!u.max&&l>=u.max,c=uSingCost(u),can=!maxed&&B.cmp(state.singCores,c)>=0;
+      setText(r.lvl,maxed?'Lv.'+l+' · 满':('Lv.'+l));
+      setText(r.btn,maxed?'已满级':B.fmt(c));
+      if(r.btnMax)setText(r.btnMax,'最大');
+      r.btn.disabled=!can;if(r.btnMax)r.btnMax.disabled=!can;
+      r.row.classList.toggle('affordable',can);r.row.classList.toggle('maxed',maxed);
+    });
+  }
+  refreshAutoPrestigePanel();refreshAutoBoomPanel();refreshAutoAnnihilatePanel();
+}
+// ===== 主循环 =====
+let lastTime=performance.now();
+function step(dt){
+  recalc();
+  const g=B.mul(P.prod,B.fn(dt));
+  if(B.cmp(g,B.z)>0){state.charge=B.add(state.charge,g);state.runCharge=B.add(state.runCharge,g);state.totalCharge=B.add(state.totalCharge,g)}
+  const aLvl=u555ById('a');
+  if(aLvl>0){const p=clickPower();const total=B.mul(p,B.fn(aLvl*dt));state.charge=B.add(state.charge,total);state.runCharge=B.add(state.runCharge,total);state.totalCharge=B.add(state.totalCharge,total)}
+  if(state.autoBuy&&(state.cores[0]>0||state.booms>0||state.singCores[0]>0)){
+    const thresh=autoBuyThreshold();
+    for(let i=TIERS.length-1;i>=0;i--){
+      const t=TIERS[i];
+      if(state.autoBuyMax&&state.autoMaxUnlocked){const n=maxAffordable(t);if(n>0)buyTier(t,n)}
+      else{if(B.cmp(state.charge,B.mul(tierCost(t),[thresh,0]))>=0)buyTier(t,1)}
+    }
+  }
+  if(state.autoUpgrade&&state.autoUpgradeUnlocked){
+    const thresh=autoBuyThreshold();
+    for(let i=0;i<UPGRADES.length;i++){
+      const u=UPGRADES[i];const l=upgradeLevel(u);
+      if(u.max&&l>=u.max)continue;
+      const c=upgradeCost(u);
+      if(B.cmp(state.charge,B.mul(c,[thresh,0]))>=0)buyUpgradeMax(u);
+    }
+  }
+  if(state.autoPrestige&&u555ById('p')>0){
+    autoPrestigeTimer+=dt;
+    if(autoPrestigeTimer>=0.5){autoPrestigeTimer=0;if(shouldAutoPrestige())doPrestige(true)}
+  }
+  if(state.autoBoom&&u555ById('s')>0){
+    autoBoomTimer+=dt;
+    if(autoBoomTimer>=0.5){autoBoomTimer=0;if(shouldAutoBoom())doBoom()}
+  }
+  if(state.autoAnnihilate&&uSingById('s6')>0){
+    autoAnnihilateTimer+=dt;
+    if(autoAnnihilateTimer>=0.5){autoAnnihilateTimer=0;if(shouldAutoAnnihilate())doAnnihilate()}
+  }
+}
+function loop(now){const dt=Math.min((now-lastTime)/1000,0.25);lastTime=now;step(dt);render();requestAnimationFrame(loop)}
+// ===== 手动充电 =====
+const manualBtn=el.manual,HOLD_START_DELAY=300,HOLD_INTERVAL=55,FLOAT_THROTTLE=110;
+let holdDelayTimer=null,holdRepeatTimer=null,isHolding=false,lastFloatTime=0;
+function chargeOnce(x,y,withFloat){const a=clickPower();state.charge=B.add(state.charge,a);state.runCharge=B.add(state.runCharge,a);state.totalCharge=B.add(state.totalCharge,a);if(withFloat!==false)spawnFloat(a,x,y)}
+function spawnFloat(a,x,y){const n=performance.now();if(n-lastFloatTime<FLOAT_THROTTLE)return;lastFloatTime=n;const s=document.createElement('div');s.className='float-num';s.textContent='+'+B.fmt(a);s.style.left=(x||window.innerWidth/2)+'px';s.style.top=(y||window.innerHeight/2)+'px';document.body.appendChild(s);setTimeout(()=>s.remove(),900)}
+function stopHold(){isHolding=false;if(holdDelayTimer){clearTimeout(holdDelayTimer);holdDelayTimer=null}if(holdRepeatTimer){clearInterval(holdRepeatTimer);holdRepeatTimer=null}manualBtn.classList.remove('holding')}
+function startHold(x,y){if(isHolding)return;isHolding=true;manualBtn.classList.add('holding');chargeOnce(x,y);holdDelayTimer=setTimeout(()=>{holdDelayTimer=null;if(!isHolding)return;holdRepeatTimer=setInterval(()=>{if(isHolding)chargeOnce(x,y)},HOLD_INTERVAL)},HOLD_START_DELAY)}
+function bindRelease(){const rel=()=>{document.removeEventListener('pointerup',rel);document.removeEventListener('pointercancel',rel);document.removeEventListener('mouseup',rel);document.removeEventListener('touchend',rel);document.removeEventListener('touchcancel',rel);stopHold()};document.addEventListener('pointerup',rel);document.addEventListener('pointercancel',rel);document.addEventListener('mouseup',rel);document.addEventListener('touchend',rel);document.addEventListener('touchcancel',rel)}
+if(window.PointerEvent){manualBtn.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault();startHold(e.clientX,e.clientY);bindRelease()})}else{manualBtn.addEventListener('mousedown',e=>{if(e.button!==0)return;e.preventDefault();startHold(e.clientX,e.clientY);bindRelease()});manualBtn.addEventListener('touchstart',e=>{const t=e.touches[0];if(!t)return;e.preventDefault();startHold(t.clientX,t.clientY);bindRelease()},{passive:false})}
+manualBtn.addEventListener('click',e=>{if(e.detail>0)return;const r=manualBtn.getBoundingClientRect();chargeOnce(r.left+r.width/2,r.top+r.height/2)});
+manualBtn.addEventListener('contextmenu',e=>e.preventDefault());manualBtn.addEventListener('dragstart',e=>e.preventDefault());window.addEventListener('blur',stopHold);
+// ===== 按钮 =====
+el.forgeBtn.addEventListener('click',()=>{const g=coreGain();if(B.cmp(g,[1,0])<0)return;if(confirm('确定重铸电网？\n\n将失去所有电池与升级，\n获得 '+B.fmt(g)+' 个核心。')){doPrestige(false);render();refreshAutoRows()}});
+el.boomBtn.addEventListener('click',()=>{const g=boomGain();if(B.cmp(g,B.z)<=0)return;if(confirm('确定引爆全部电池？\n\n将失去所有核心、电池与升级，\n获得 '+B.fmt(g)+' 个555电池。\n555电池升级永久保留。')){doBoom();render();refreshAutoRows()}});
+el.singBtn.addEventListener('click',()=>{const g=singGain();if(B.cmp(g,B.z)<=0)return;if(confirm('确定湮灭全部电池？\n\n将彻底抹除核心、555电池与全部升级，\n获得 '+B.fmt(g)+' 个奇点核心。\n奇点核心与奇点升级永久保留。')){doAnnihilate();render();refreshAutoRows()}});
+document.getElementById('wipeBtn').addEventListener('click',()=>{if(confirm('确定要清除全部存档吗？此操作不可撤销。')){localStorage.removeItem(SAVE_KEY);state=defState();autoPrestigeTimer=autoBoomTimer=autoAnnihilateTimer=0;recalc();refreshAutoRows();syncAutoPrestigeUI();syncAutoBoomUI();syncAutoAnnihilateUI();render();toast('存档已清除')}});
+window.addEventListener('beforeunload',save);
+// ===== 剪贴板 =====
+async function copyToClipboard(text){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true}}catch(e){}try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.left='-9999px';ta.style.top='0';ta.setAttribute('readonly','');document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,text.length);const ok=document.execCommand('copy');document.body.removeChild(ta);return ok}catch(e){return false}}
+async function readClipboard(){try{if(navigator.clipboard&&navigator.clipboard.readText){const t=await navigator.clipboard.readText();if(t)return t}}catch(e){}return null}
+// ===== 导入导出 =====
+let ioMode=null;
+const ioModal=document.getElementById('ioModal'),ioText=document.getElementById('ioText'),ioTitle=document.getElementById('ioTitle'),ioHelp=document.getElementById('ioHelp'),btnCopy=document.getElementById('ioCopy'),btnPaste=document.getElementById('ioPaste'),btnConfirm=document.getElementById('ioConfirm'),btnCancel=document.getElementById('ioCancel');
+function openIo(mode,text){
+  ioMode=mode;
+  if(mode==='export'){
+    ioTitle.textContent='📤 导出存档';
+    ioHelp.innerHTML='<em>①</em> 下方文本已自动选中，点「复制」把整段文本保存到<b>备忘录 / 微信文件传输助手</b>。<br><em>②</em> 下次换设备或清缓存后，用「导入存档」粘贴回来即可恢复进度。';
+    ioText.readOnly=true;ioText.value=text||'';
+    btnCopy.style.display='';btnPaste.style.display='none';btnConfirm.style.display='none';btnCancel.textContent='关闭';
+  }else{
+    ioTitle.textContent='📥 导入存档';
+    ioHelp.innerHTML='把之前复制的整段存档文本粘贴到下面，然后点「确定」。<br>⚠️ 导入会<b>覆盖当前进度</b>，建议先导出备份一次。';
+    ioText.readOnly=false;ioText.value=text||'';
+    btnCopy.style.display='none';btnPaste.style.display='';btnConfirm.style.display='';btnCancel.textContent='取消';
+  }
+  ioModal.classList.add('show');
+  setTimeout(()=>{ioText.focus();if(mode==='export')ioText.select()},80);
+}
+function closeIo(){ioModal.classList.remove('show');ioMode=null}
+btnCancel.onclick=closeIo;
+ioModal.addEventListener('click',e=>{if(e.target===ioModal)closeIo()});
+btnCopy.onclick=async()=>{const ok=await copyToClipboard(ioText.value);if(ok){toast('✅ 已复制到剪贴板')}else{ioText.focus();ioText.select();ioText.setSelectionRange(0,ioText.value.length);toast('请长按选中后手动复制',true)}};
+btnPaste.onclick=async()=>{const t=await readClipboard();if(t){ioText.value=t.trim();toast('已粘贴剪贴板内容')}else{ioText.focus();toast('请长按输入框手动粘贴',true)}};
+btnConfirm.onclick=()=>{
+  if(ioMode!=='import')return;
+  const txt=ioText.value;
+  if(!txt.trim()){toast('请先粘贴存档文本',true);return}
+  try{const obj=decodeSave(txt);applySave(obj);save();recalc();refreshAutoRows();syncAutoPrestigeUI();syncAutoBoomUI();syncAutoAnnihilateUI();render();closeIo();toast('✅ 导入成功')}
+  catch(e){console.error('import error:',e);toast('❌ 导入失败：'+(e.message||'存档格式不正确'),true)}
+};
+document.getElementById('exportBtn').onclick=async()=>{
+  save();let str;
+  try{str=encodeSave(collectSave());if(!str||str.length<20)throw new Error('编码结果异常')}
+  catch(e){console.error('export error:',e);toast('导出失败：'+(e.message||'未知错误'),true);return}
+  openIo('export',str);
+  const ok=await copyToClipboard(str);
+  if(ok)toast('✅ 已自动复制，粘贴到备忘录保存即可');
+};
+document.getElementById('importBtn').onclick=()=>openIo('import','');
+// ===== Tab切换 =====
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+  render();
+}));
+// ===== 启动 =====
+buildTiers();buildUpgrades();buildU555();buildUSing();buildSpecial();
+load();recalc();refreshAutoRows();syncAutoPrestigeUI();syncAutoBoomUI();syncAutoAnnihilateUI();
+render();
+setInterval(save,AUTOSAVE_MS);
+requestAnimationFrame(loop);
+</script></body></html>
